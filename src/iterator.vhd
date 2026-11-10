@@ -31,11 +31,11 @@ END iterator;
 
 ARCHITECTURE behavioral OF iterator IS
 
-SIGNAL x_c_latch : 	SIGNED (K-1 DOWNTO 0);
-SIGNAL y_c_latch : 	SIGNED (K-1 DOWNTO 0);
-SIGNAL iter_latch: 	UNSIGNED (W_ITER-1 DOWNTO 0);
-SIGNAL addr_latch: 	UNSIGNED (W_ADDR-1 DOWNTO 0);
-SIGNAL valid: STD_LOGIC;
+SIGNAL x_c_r	: SIGNED (K-1 DOWNTO 0);
+SIGNAL y_c_r	: SIGNED (K-1 DOWNTO 0);
+SIGNAL iter_r	: UNSIGNED (W_ITER-1 DOWNTO 0);
+SIGNAL addr_r	: UNSIGNED (W_ADDR-1 DOWNTO 0);
+SIGNAL valid	: STD_LOGIC := '0';
 
 SIGNAL xx: 			SIGNED (2*K-1 DOWNTO 0);
 SIGNAL xy: 			SIGNED (2*K-1 DOWNTO 0);
@@ -55,10 +55,10 @@ yy <= y * y;
 xy <= x * y;
 norm2 <= xx + yy; 
 
-iter<=iter_latch;
-addr_out<=addr_latch;
+iter<=iter_r;
+addr_out<=addr_r;
 
-done_aux1<= '0' WHEN iter_latch<MAX_ITER ELSE '1';
+done_aux1<= '0' WHEN iter_r<MAX_ITER ELSE '1';
 done_aux2<= '0' WHEN SHIFT_RIGHT(norm2, 2*(K-I)) < 4 ELSE '1';
 done_aux<=(done_aux1 OR done_aux2) AND valid;
 done<=done_aux;
@@ -67,17 +67,17 @@ PROCESS(clk)
 BEGIN
 	IF(RISING_EDGE(clk)) THEN
 		IF (load='1') THEN 
-			x_c_latch<=x_c;
-			y_c_latch<=y_c;
+			x_c_r<=x_c;
+			y_c_r<=y_c;
 			x<=x_c;
 			y<=y_c;
-			addr_latch<=addr;
-			iter_latch<=(OTHERS=>'0');
+			addr_r<=addr;
+			iter_r<=(OTHERS=>'0');
 			valid<='1';
-		ELSIF (done_aux='0') THEN
-			x <= (xx(2*K-I-1 DOWNTO K-I) - yy(2*K-I-1 DOWNTO K-I)) + x_c_latch;
-			y <= xy(2*K-I-2 DOWNTO K-I-1) + y_c_latch;
-			iter_latch<=iter_latch+1;
+		ELSIF (done_aux='0' AND valid='1') THEN
+			x <= (xx(2*K-I-1 DOWNTO K-I) - yy(2*K-I-1 DOWNTO K-I)) + x_c_r;
+			y <= xy(2*K-I-2 DOWNTO K-I-1) + y_c_r;
+			iter_r<=iter_r+1;
 		ELSE
 			valid<='0';
 		END IF;
