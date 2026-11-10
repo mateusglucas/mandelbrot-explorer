@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""VUnit test runner. Usage:  .venv/bin/python run.py -v"""
+"""VUnit test runner. Usage:  uv run python run.py -v   (or: make test)"""
 
 from pathlib import Path
 from vunit import VUnit

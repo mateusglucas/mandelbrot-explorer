@@ -1,0 +1,11 @@
+[project]
+name = "mandelbrot-explorer"
+version = "0.1.0"
+description = "Mandelbrot explorer FPGA (Tang Nano) — VHDL + VUnit"
+requires-python = ">=3.10"
+dependencies = [
+    "vunit-hdl>=4.7.0",
+]
+
+[tool.uv]
+package = false
