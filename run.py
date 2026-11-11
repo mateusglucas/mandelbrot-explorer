@@ -14,6 +14,7 @@ lib = vu.add_library("lib")
 lib.add_source_files(ROOT / "src" / "utils.vhd")
 lib.add_source_files(ROOT / "src" / "calc_addr.vhd")
 lib.add_source_files(ROOT / "src" / "iterator.vhd")
+lib.add_source_files(ROOT / "src" / "idx_to_coord.vhd")
 lib.add_source_files(ROOT / "tb" / "tb_*.vhd")
 
 # VUnit + GHDL: VHDL-2008 (biblioteca do VUnit exige)
@@ -26,5 +27,16 @@ tb.add_config(name="640x480", generics={"RES_H": 640, "RES_V": 480})
 tb.add_config(name="128x240", generics={"RES_H": 128, "RES_V": 240})
 tb.add_config(name="320x256", generics={"RES_H": 320, "RES_V": 256})
 tb.add_config(name="128x256", generics={"RES_H": 128, "RES_V": 256})
+
+tb_idx = lib.entity("tb_idx_to_coord")
+# RATIO_FP is Q(I.F) bit pattern; F=12 with defaults K=16,I=4
+#   4096=1.0, 2048=0.5, 1024=0.25, 3072=0.75, 5120=1.25
+tb_idx.add_config(name="res5_r1", generics={"RES": 5, "RATIO_FP": 4096})
+tb_idx.add_config(name="res5_r0_5", generics={"RES": 5, "RATIO_FP": 2048})
+tb_idx.add_config(name="res5_r0_25", generics={"RES": 5, "RATIO_FP": 1024})
+tb_idx.add_config(name="res5_r0_75", generics={"RES": 5, "RATIO_FP": 3072})
+tb_idx.add_config(name="res5_r1_25", generics={"RES": 5, "RATIO_FP": 5120})
+tb_idx.add_config(name="res320_r0_5", generics={"RES": 320, "W_ZOOM": 5, "RATIO_FP": 2048})
+tb_idx.add_config(name="res320_r0_75", generics={"RES": 320, "W_ZOOM": 5, "RATIO_FP": 3072})
 
 vu.main()

@@ -9,12 +9,12 @@ ENTITY iterator IS
 	GENERIC(
 
 		K			: NATURAL:=36;  -- number of bits of fixed point representation
-		I			: NATURAL:=4;  -- number of integer bits (including the sign bit) 
-								   -- worst case is x_c=2-epsilon, y_c=0 -> x_new=2^2+2-epsilon=6-epsilon, y_new=0, 
-								   -- which needs 4 bits in integer part (with sign bit)
+		I			: NATURAL:=4;   -- number of integer bits (including the sign bit) 
+								    -- worst case is x_c=2-epsilon, y_c=0 -> x_new=2^2+2-epsilon=6-epsilon, y_new=0, 
+								    -- which needs 4 bits in integer part (with sign bit)
 		MAX_ITER	: NATURAL:=255; -- maximum number of iterations
-		W_ADDR		: NATURAL:=17;  -- number of bits to represent the address of the pixel in the framebuffer, ceil(log2(RES_H*RES_V))
-		W_ITER		: NATURAL:=8    -- number of bits to represent the number of iterations, ceil(log2(MAX_ITER+1))
+		W_ADDR		: NATURAL:=17;  -- bits_of(RES_H*RES_V-1)
+		W_ITER		: NATURAL:=8    -- bits_of(MAX_ITER)
 	);
 	PORT
 	(
