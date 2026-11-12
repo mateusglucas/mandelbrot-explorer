@@ -7,12 +7,11 @@ USE work.utils.all;
 
 ENTITY idx_to_coord IS
 	GENERIC(
-		K			: NATURAL:=36;  -- number of bits of fixed point representation
-		-- I			: NATURAL:=4;   -- number of integer bits (including the sign bit)
+		K			: NATURAL:=36;  -- number of bits of coordinates
 		RES		    : NATURAL;      -- pixels resolution
 		W_IDX		: NATURAL:=9;   -- bits_of(RES-1)
 		W_ZOOM		: NATURAL:=5;   -- bits_of(zoom)
-		RATIO		: SIGNED        -- units of coord per pixel, in fixed point representation
+		RATIO		: SIGNED        -- units of coord per pixel at zoom=0
 	);
 	PORT
 	(
