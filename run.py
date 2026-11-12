@@ -16,6 +16,7 @@ lib.add_source_files(ROOT / "src" / "calc_addr.vhd")
 lib.add_source_files(ROOT / "src" / "iterator.vhd")
 lib.add_source_files(ROOT / "src" / "idx_to_coord.vhd")
 lib.add_source_files(ROOT / "src" / "pan.vhd")
+lib.add_source_files(ROOT / "src" / "memory.vhd")
 lib.add_source_files(ROOT / "tb" / "tb_*.vhd")
 
 # VUnit + GHDL: VHDL-2008 (biblioteca do VUnit exige)
@@ -30,7 +31,7 @@ tb.add_config(name="320x256", generics={"RES_H": 320, "RES_V": 256})
 tb.add_config(name="128x256", generics={"RES_H": 128, "RES_V": 256})
 
 tb_idx = lib.entity("tb_idx_to_coord")
-# RATIO_FP is Q(I.F) bit pattern; F=12 with defaults K=16,I=4
+# RATIO_FP is Q fixed-point bit pattern; F=K-4=12 with default K=16
 #   4096=1.0, 2048=0.5, 1024=0.25, 3072=0.75, 5120=1.25
 tb_idx.add_config(name="res5_r1", generics={"RES": 5, "RATIO_FP": 4096})
 tb_idx.add_config(name="res5_r0_5", generics={"RES": 5, "RATIO_FP": 2048})
@@ -44,5 +45,8 @@ tb_pan = lib.entity("tb_pan")
 # DELTA_FP bit pattern; 256>>zoom, clamps to 1 at high zoom
 tb_pan.add_config(name="d256", generics={"DELTA_FP": 256})
 tb_pan.add_config(name="d16", generics={"DELTA_FP": 16})
+
+tb_mem = lib.entity("tb_memory")
+tb_mem.add_config(name="small", generics={"MEM_SIZE": 16, "W_ADDR": 5, "W_DATA": 3})
 
 vu.main()
