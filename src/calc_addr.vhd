@@ -18,15 +18,28 @@ ENTITY calc_addr IS
 	);
 	PORT
 	(
+		clk		: IN STD_LOGIC;
+		en		: IN STD_LOGIC;
 		row		: IN UNSIGNED (W_ROW-1 DOWNTO 0);
 		col 	: IN UNSIGNED (W_COL-1 DOWNTO 0);
-		addr	: OUT UNSIGNED (W_ADDR-1 DOWNTO 0)
+		addr	: OUT UNSIGNED (W_ADDR-1 DOWNTO 0);
+		valid	: OUT STD_LOGIC
 	);
 END calc_addr;
 
 ARCHITECTURE structural OF calc_addr IS
 BEGIN
 
-addr <= resize(to_unsigned(RES_H, bits_of(RES_H)) * row, W_ADDR) + resize(col, W_ADDR);
+	PROCESS(clk)
+	BEGIN
+		IF RISING_EDGE(clk) THEN
+			IF en='1' THEN
+				addr <= resize(to_unsigned(RES_H, bits_of(RES_H)) * row, W_ADDR) + resize(col, W_ADDR);
+				valid <= '1';
+			ELSE
+				valid <= '0';
+			END IF;
+		END IF;
+	END PROCESS;
 
 END structural;

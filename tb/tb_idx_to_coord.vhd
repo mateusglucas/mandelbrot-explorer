@@ -32,7 +32,6 @@ ARCHITECTURE sim OF tb_idx_to_coord IS
 	SIGNAL idx		: UNSIGNED(W_IDX - 1 DOWNTO 0) := (OTHERS => '0');
 	SIGNAL zoom		: UNSIGNED(W_ZOOM - 1 DOWNTO 0) := (OTHERS => '0');
 	SIGNAL coord	: SIGNED(K - 1 DOWNTO 0);
-	SIGNAL idx_out	: UNSIGNED(W_IDX - 1 DOWNTO 0);
 	SIGNAL valid	: STD_LOGIC;
 
 	FUNCTION expected_coord(
@@ -84,7 +83,6 @@ ARCHITECTURE sim OF tb_idx_to_coord IS
 		SIGNAL en_s		: OUT STD_LOGIC;
 		SIGNAL clk_s	: IN STD_LOGIC;
 		SIGNAL coord_s	: IN SIGNED(K - 1 DOWNTO 0);
-		SIGNAL idx_out_s: IN UNSIGNED(W_IDX - 1 DOWNTO 0);
 		SIGNAL valid_s	: IN STD_LOGIC
 	) IS
 		VARIABLE exp : SIGNED(K - 1 DOWNTO 0);
@@ -92,7 +90,6 @@ ARCHITECTURE sim OF tb_idx_to_coord IS
 		apply(c, idx_n, z, center_s, idx_s, zoom_s, en_s, clk_s);
 		exp := expected_coord(c, idx_n, z);
 		check_equal(coord_s, exp, msg);
-		check_equal(idx_out_s, idx_n, msg & " idx_out");
 		check_equal(valid_s, '1', msg & " valid");
 	END PROCEDURE;
 BEGIN
@@ -111,7 +108,6 @@ BEGIN
 			idx		=> idx,
 			zoom	=> zoom,
 			coord	=> coord,
-			idx_out	=> idx_out,
 			valid	=> valid
 		);
 
@@ -125,32 +121,32 @@ BEGIN
 		WHILE test_suite LOOP
 			IF run("corners_zoom0") THEN
 				check_point(to_signed(0, K), 0, 0, "idx=0 zoom=0 center=0",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 				check_point(to_signed(0, K), RES - 1, 0, "idx=RES-1 zoom=0 center=0",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 				check_point(ONE, 0, 0, "idx=0 zoom=0 center=1.0",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 				check_point(-ONE, RES - 1, 0, "idx=RES-1 zoom=0 center=-1.0",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 
 			ELSIF run("mid_pixel") THEN
 				-- odd RES: middle idx has diff=0 => coord=center
 				check_point(resize(3 * ONE, K), RES / 2, 0, "mid idx => coord=center",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 
 			ELSIF run("zoom") THEN
 				check_point(to_signed(0, K), 0, 1, "idx=0 zoom=1",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 				check_point(to_signed(0, K), RES - 1, 1, "idx=RES-1 zoom=1",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 				check_point(to_signed(0, K), 0, 2, "idx=0 zoom=2",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 				check_point(to_signed(0, K), RES - 1, 2, "idx=RES-1 zoom=2",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 
 			ELSIF run("en_hold") THEN
 				check_point(to_signed(0, K), 0, 0, "load before hold",
-					center, idx, zoom, en, clk, coord, idx_out, valid);
+					center, idx, zoom, en, clk, coord, valid);
 				held := coord;
 				-- change inputs with en=0: registered state must hold; valid clears
 				center	<= ONE;
@@ -159,7 +155,6 @@ BEGIN
 				WAIT UNTIL rising_edge(clk);
 				WAIT FOR 1 ns;
 				check_equal(coord, held, "coord must hold when en=0");
-				check_equal(idx_out, 0, "idx_out must hold when en=0");
 				check_equal(valid, '0', "valid must clear when en=0");
 
 			ELSIF run("sweep_idx") THEN
@@ -167,17 +162,17 @@ BEGIN
 				IF RES <= 16 THEN
 					FOR n IN 0 TO RES - 1 LOOP
 						check_point(to_signed(0, K), n, 0, "sweep zoom=0",
-							center, idx, zoom, en, clk, coord, idx_out, valid);
+							center, idx, zoom, en, clk, coord, valid);
 						check_point(to_signed(0, K), n, 1, "sweep zoom=1",
-							center, idx, zoom, en, clk, coord, idx_out, valid);
+							center, idx, zoom, en, clk, coord, valid);
 					END LOOP;
 				ELSE
 					check_point(to_signed(0, K), 1, 0, "sweep idx=1",
-						center, idx, zoom, en, clk, coord, idx_out, valid);
+						center, idx, zoom, en, clk, coord, valid);
 					check_point(to_signed(0, K), RES / 4, 0, "sweep idx=RES/4",
-						center, idx, zoom, en, clk, coord, idx_out, valid);
+						center, idx, zoom, en, clk, coord, valid);
 					check_point(to_signed(0, K), (3 * RES) / 4, 1, "sweep idx=3RES/4 zoom=1",
-						center, idx, zoom, en, clk, coord, idx_out, valid);
+						center, idx, zoom, en, clk, coord, valid);
 				END IF;
 			END IF;
 		END LOOP;

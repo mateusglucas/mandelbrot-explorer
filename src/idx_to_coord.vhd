@@ -21,8 +21,6 @@ ENTITY idx_to_coord IS
 		idx			: IN UNSIGNED (W_IDX-1 DOWNTO 0); -- 0 to RES-1
 		zoom		: IN UNSIGNED (W_ZOOM-1 DOWNTO 0);
 		coord		: OUT SIGNED  (K-1 DOWNTO 0);
-		-- overflow	: OUT STD_LOGIC;
-		idx_out		: OUT UNSIGNED (W_IDX-1 DOWNTO 0);
 		valid		: OUT STD_LOGIC
 	);
 END idx_to_coord;
@@ -45,7 +43,6 @@ BEGIN
 	shift <= RESIZE(SHIFT_RIGHT(prod, TO_INTEGER(zoom_r)+1), shift'LENGTH); -- shift = prod / 2^(zoom+1)
 
 	coord <= center_r + shift; -- coord = center + shift
-	idx_out <= idx_r;
 
 	PROCESS(clk)
 	BEGIN
