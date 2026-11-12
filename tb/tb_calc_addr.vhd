@@ -90,16 +90,19 @@ BEGIN
 					row, col, en, clk, addr, valid);
 
 			ELSIF run("en_hold") THEN
+				WAIT FOR 1 ns;
+				check_equal(valid, '0', "valid starts low");
+
 				check_point(1, 2, "load before hold",
 					row, col, en, clk, addr, valid);
 				held := to_integer(addr);
-				-- change inputs with en=0: addr holds, valid clears
+				-- change inputs with en=0: addr holds; valid stays sticky high
 				row	<= to_unsigned(RES_V - 1, W_ROW);
 				col	<= to_unsigned(RES_H - 1, W_COL);
 				WAIT UNTIL rising_edge(clk);
 				WAIT FOR 1 ns;
 				check_equal(to_integer(addr), held, "addr must hold when en=0");
-				check_equal(valid, '0', "valid must clear when en=0");
+				check_equal(valid, '1', "valid sticky when en=0");
 			END IF;
 		END LOOP;
 

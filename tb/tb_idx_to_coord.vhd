@@ -145,17 +145,20 @@ BEGIN
 					center, idx, zoom, en, clk, coord, valid);
 
 			ELSIF run("en_hold") THEN
+				WAIT FOR 1 ns;
+				check_equal(valid, '0', "valid starts low");
+
 				check_point(to_signed(0, K), 0, 0, "load before hold",
 					center, idx, zoom, en, clk, coord, valid);
 				held := coord;
-				-- change inputs with en=0: registered state must hold; valid clears
+				-- change inputs with en=0: registered state holds; valid sticky
 				center	<= ONE;
 				idx		<= to_unsigned(RES - 1, W_IDX);
 				zoom	<= to_unsigned(1, W_ZOOM);
 				WAIT UNTIL rising_edge(clk);
 				WAIT FOR 1 ns;
 				check_equal(coord, held, "coord must hold when en=0");
-				check_equal(valid, '0', "valid must clear when en=0");
+				check_equal(valid, '1', "valid sticky when en=0");
 
 			ELSIF run("sweep_idx") THEN
 				-- hits every pixel (small RES) or a few samples (large RES)

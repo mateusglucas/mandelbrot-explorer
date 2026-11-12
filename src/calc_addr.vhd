@@ -28,16 +28,16 @@ ENTITY calc_addr IS
 END calc_addr;
 
 ARCHITECTURE structural OF calc_addr IS
+SIGNAL valid_r: STD_LOGIC:='0';
 BEGIN
+	valid<=valid_r;
 
 	PROCESS(clk)
 	BEGIN
 		IF RISING_EDGE(clk) THEN
 			IF en='1' THEN
 				addr <= resize(to_unsigned(RES_H, bits_of(RES_H)) * row, W_ADDR) + resize(col, W_ADDR);
-				valid <= '1';
-			ELSE
-				valid <= '0';
+				valid_r <= '1';
 			END IF;
 		END IF;
 	END PROCESS;
