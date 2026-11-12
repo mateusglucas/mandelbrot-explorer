@@ -32,6 +32,7 @@ ARCHITECTURE sim OF tb_iterator IS
 	SIGNAL done		: STD_LOGIC;
 	SIGNAL iter		: UNSIGNED(W_ITER - 1 DOWNTO 0);
 	SIGNAL addr_out	: UNSIGNED(W_ADDR - 1 DOWNTO 0);
+	SIGNAL empty	: STD_LOGIC;
 
 	-- real -> Q(I.F): parte inteira << F, depois *2 extraindo bits fracionários.
 	FUNCTION to_fp(v : REAL) RETURN SIGNED IS
@@ -149,7 +150,8 @@ BEGIN
 			addr		=> addr,
 			done		=> done,
 			iter		=> iter,
-			addr_out	=> addr_out
+			addr_out	=> addr_out,
+			empty		=> empty
 		);
 
 	clk <= NOT clk AFTER CLK_PERIOD / 2;
@@ -213,6 +215,25 @@ BEGIN
 				tick(clk);
 				WAIT FOR 1 ns;
 				check_equal(done, '0', "done should be a one-cycle pulse");
+
+			ELSIF run("empty_ready") THEN
+				-- idle: ready to receive
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "empty when idle");
+
+				-- busy while iterating a point that needs several cycles (c=0.5 -> iter 4)
+				start_point(to_fp(0.5), to_fp(0.0), 1, x_c, y_c, addr, load, clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '0', "busy after load (not done yet)");
+				check_equal(done, '0', "not done yet after load for c=0.5");
+
+				wait_done(done, clk);
+				check_equal(empty, '1', "empty when done (ready for next)");
+
+				tick(clk);
+				WAIT FOR 1 ns;
+				check_equal(done, '0', "done cleared");
+				check_equal(empty, '1', "empty stays high when idle again");
 			END IF;
 		END LOOP;
 

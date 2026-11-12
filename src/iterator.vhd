@@ -25,7 +25,8 @@ ENTITY iterator IS
 		addr		: IN UNSIGNED(W_ADDR-1 DOWNTO 0); -- address of the pixel in the framebuffer
 		done		: OUT STD_LOGIC; -- done signal
 		iter		: OUT UNSIGNED(W_ITER-1 DOWNTO 0); -- number of iterations performed
-		addr_out	: OUT UNSIGNED(W_ADDR-1 DOWNTO 0) -- address of the pixel in the framebuffer
+		addr_out	: OUT UNSIGNED(W_ADDR-1 DOWNTO 0); -- address of the pixel in the framebuffer
+		empty		: OUT STD_LOGIC  -- ready to receive a new point
 	);
 END iterator;
 
@@ -62,6 +63,7 @@ done_aux1<= '0' WHEN iter_r<MAX_ITER ELSE '1';
 done_aux2<= '0' WHEN SHIFT_RIGHT(norm2, 2*(K-I)) < 4 ELSE '1';
 done_aux<=(done_aux1 OR done_aux2) AND valid;
 done<=done_aux;
+empty<=(NOT valid) OR done_aux;
 
 PROCESS(clk)
 BEGIN
