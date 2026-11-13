@@ -20,6 +20,7 @@ lib.add_source_files(ROOT / "src" / "memory.vhd")
 lib.add_source_files(ROOT / "src" / "scheduler.vhdl")
 lib.add_source_files(ROOT / "src" / "pipe_delay.vhd")
 lib.add_source_files(ROOT / "src" / "pixel_map.vhd")
+lib.add_source_files(ROOT / "src" / "counter.vhdl")
 lib.add_source_files(ROOT / "tb" / "tb_*.vhd")
 
 # VUnit + GHDL: VHDL-2008 (biblioteca do VUnit exige)
@@ -67,5 +68,13 @@ tb_pipe = lib.entity("tb_pipe_delay")
 tb_pipe.add_config(name="n0", generics={"N": 0, "W": 4})
 tb_pipe.add_config(name="n1", generics={"N": 1, "W": 4})  # null-range shift
 tb_pipe.add_config(name="n3", generics={"N": 3, "W": 8})
+
+tb_cnt = lib.entity("tb_counter")
+tb_cnt.add_config(name="max5", generics={"MAX": 5})
+tb_cnt.add_config(name="max10", generics={"MAX": 10})
+tb_cnt.add_config(name="max20", generics={"MAX": 20})
+tb_cnt.add_config(name="max8", generics={"MAX": 8})    # power of 2
+tb_cnt.add_config(name="max16", generics={"MAX": 16})  # power of 2
+tb_cnt.add_config(name="max32", generics={"MAX": 32})  # power of 2
 
 vu.main()
