@@ -17,6 +17,7 @@ lib.add_source_files(ROOT / "src" / "iterator.vhd")
 lib.add_source_files(ROOT / "src" / "idx_to_coord.vhd")
 lib.add_source_files(ROOT / "src" / "pan.vhd")
 lib.add_source_files(ROOT / "src" / "memory.vhd")
+lib.add_source_files(ROOT / "src" / "scheduler.vhdl")
 lib.add_source_files(ROOT / "tb" / "tb_*.vhd")
 
 # VUnit + GHDL: VHDL-2008 (biblioteca do VUnit exige)
@@ -49,5 +50,10 @@ tb_pan.add_config(name="d16", generics={"DELTA_FP": 16})
 tb_mem = lib.entity("tb_memory")
 # MEM_SIZE not power-of-2 so W_ADDR=bits_of(MEM_SIZE-1) can still encode OOR addrs
 tb_mem.add_config(name="small", generics={"MEM_SIZE": 12, "W_DATA": 3})
+
+tb_sched = lib.entity("tb_scheduler")
+tb_sched.add_config(name="3x2", generics={"RES_H": 3, "RES_V": 2})
+tb_sched.add_config(name="4x3", generics={"RES_H": 4, "RES_V": 3})
+tb_sched.add_config(name="5x5", generics={"RES_H": 5, "RES_V": 5})
 
 vu.main()
