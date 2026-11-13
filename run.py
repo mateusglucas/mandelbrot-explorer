@@ -21,6 +21,7 @@ lib.add_source_files(ROOT / "src" / "scheduler.vhdl")
 lib.add_source_files(ROOT / "src" / "pipe_delay.vhd")
 lib.add_source_files(ROOT / "src" / "pixel_map.vhd")
 lib.add_source_files(ROOT / "src" / "counter.vhdl")
+lib.add_source_files(ROOT / "src" / "navigator.vhdl")
 lib.add_source_files(ROOT / "tb" / "tb_*.vhd")
 
 # VUnit + GHDL: VHDL-2008 (biblioteca do VUnit exige)
@@ -76,5 +77,10 @@ tb_cnt.add_config(name="max20", generics={"MAX": 20})
 tb_cnt.add_config(name="max8", generics={"MAX": 8})    # power of 2
 tb_cnt.add_config(name="max16", generics={"MAX": 16})  # power of 2
 tb_cnt.add_config(name="max32", generics={"MAX": 32})  # power of 2
+
+tb_nav = lib.entity("tb_navigator")
+tb_nav.add_config(name="z5_d256", generics={"ZOOM_MAX": 5, "DELTA_FP": 256})
+tb_nav.add_config(name="z10_d16", generics={"ZOOM_MAX": 10, "DELTA_FP": 16})
+tb_nav.add_config(name="z8_d256", generics={"ZOOM_MAX": 8, "DELTA_FP": 256})
 
 vu.main()
