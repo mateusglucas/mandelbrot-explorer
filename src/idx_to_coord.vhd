@@ -17,11 +17,12 @@ ENTITY idx_to_coord IS
 		clk			: IN STD_LOGIC;
 		rst			: IN STD_LOGIC;
 		en			: IN STD_LOGIC;
+		valid_in	: IN STD_LOGIC;
 		center		: IN SIGNED   (K-1 DOWNTO 0);
 		idx			: IN UNSIGNED (bits_of(RES-1)-1 DOWNTO 0); -- 0 to RES-1
 		zoom		: IN UNSIGNED (W_ZOOM-1 DOWNTO 0);
 		coord		: OUT SIGNED  (K-1 DOWNTO 0);
-		valid		: OUT STD_LOGIC
+		valid_out	: OUT STD_LOGIC
 	);
 END idx_to_coord;
 
@@ -31,7 +32,7 @@ CONSTANT W_IDX: NATURAL := bits_of(RES-1);
 SIGNAL center_r: SIGNED (K-1 DOWNTO 0);
 SIGNAL idx_r: UNSIGNED (W_IDX-1 DOWNTO 0);
 SIGNAL zoom_r: UNSIGNED (W_ZOOM-1 DOWNTO 0);
-SIGNAL valid_r: STD_LOGIC;
+SIGNAL valid_out_r: STD_LOGIC;
 
 SIGNAL two_idx: SIGNED (bits_of(2*(RES-1)) DOWNTO 0); -- 0 to 2*(RES-1) -> bits_of(2*(RES-1)) + 1 bits (+1 for sign bit)
 CONSTANT RES_MINUS_1: SIGNED (two_idx'HIGH DOWNTO 0) := TO_SIGNED(RES-1, two_idx'LENGTH);
@@ -40,7 +41,7 @@ SIGNAL prod: SIGNED (RATIO'LENGTH + diff'LENGTH - 1 DOWNTO 0);
 SIGNAL shift: SIGNED (K-1 DOWNTO 0);
 
 BEGIN
-	valid<=valid_r;
+	valid_out<=valid_out_r;
 	
 	two_idx <= SIGNED(SHIFT_LEFT(RESIZE(idx_r, two_idx'LENGTH), 1)); -- 2*idx
 	diff <= RESIZE(two_idx - RES_MINUS_1, diff'LENGTH); -- diff = 2*idx - (RES-1)
@@ -53,12 +54,12 @@ BEGIN
 	BEGIN
 		IF RISING_EDGE(clk) THEN
 			IF rst='1' THEN
-				valid_r <= '0';
+				valid_out_r <= '0';
 			ELSIF en='1' THEN
 				center_r <= center;
 				idx_r <= idx;
 				zoom_r <= zoom;
-				valid_r <= '1';
+				valid_out_r <= valid_in;
 			END IF;
 		END IF;
 	END PROCESS;
