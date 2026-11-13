@@ -18,6 +18,8 @@ lib.add_source_files(ROOT / "src" / "idx_to_coord.vhd")
 lib.add_source_files(ROOT / "src" / "pan.vhd")
 lib.add_source_files(ROOT / "src" / "memory.vhd")
 lib.add_source_files(ROOT / "src" / "scheduler.vhdl")
+lib.add_source_files(ROOT / "src" / "pipe_delay.vhd")
+lib.add_source_files(ROOT / "src" / "pixel_map.vhd")
 lib.add_source_files(ROOT / "tb" / "tb_*.vhd")
 
 # VUnit + GHDL: VHDL-2008 (biblioteca do VUnit exige)
@@ -55,5 +57,15 @@ tb_sched = lib.entity("tb_scheduler")
 tb_sched.add_config(name="3x2", generics={"RES_H": 3, "RES_V": 2})
 tb_sched.add_config(name="4x3", generics={"RES_H": 4, "RES_V": 3})
 tb_sched.add_config(name="5x5", generics={"RES_H": 5, "RES_V": 5})
+
+tb_ca = lib.entity("tb_pixel_map")
+tb_ca.add_config(name="5x4_r1", generics={"RES_H": 5, "RES_V": 4, "RATIO_FP": 4096})
+tb_ca.add_config(name="5x4_r0_5", generics={"RES_H": 5, "RES_V": 4, "RATIO_FP": 2048})
+tb_ca.add_config(name="8x6", generics={"RES_H": 8, "RES_V": 6, "RATIO_FP": 4096})
+
+tb_pipe = lib.entity("tb_pipe_delay")
+tb_pipe.add_config(name="n0", generics={"N": 0, "W": 4})
+tb_pipe.add_config(name="n1", generics={"N": 1, "W": 4})  # null-range shift
+tb_pipe.add_config(name="n3", generics={"N": 3, "W": 8})
 
 vu.main()
