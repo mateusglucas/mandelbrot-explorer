@@ -47,6 +47,7 @@ tb_pan.add_config(name="d256", generics={"DELTA_FP": 256})
 tb_pan.add_config(name="d16", generics={"DELTA_FP": 16})
 
 tb_mem = lib.entity("tb_memory")
-tb_mem.add_config(name="small", generics={"MEM_SIZE": 16, "W_ADDR": 5, "W_DATA": 3})
+# MEM_SIZE not power-of-2 so W_ADDR=bits_of(MEM_SIZE-1) can still encode OOR addrs
+tb_mem.add_config(name="small", generics={"MEM_SIZE": 12, "W_DATA": 3})
 
 vu.main()

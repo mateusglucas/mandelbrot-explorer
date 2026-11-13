@@ -15,18 +15,18 @@ ENTITY tb_idx_to_coord IS
 		K			: NATURAL := 16;
 		RES			: NATURAL := 5;
 		W_ZOOM		: NATURAL := 3;
-		-- RATIO in Q fixed-point as integer bit pattern (default 1.0 with F=K-4)
 		RATIO_FP	: INTEGER := 4096  -- 2^12 with K=16
 	);
 END tb_idx_to_coord;
 
 ARCHITECTURE sim OF tb_idx_to_coord IS
-	CONSTANT ONE		: SIGNED(K - 1 DOWNTO 0) := to_signed(2 ** (K - 4), K);  -- 1.0 in Q(4.F)
+	CONSTANT ONE		: SIGNED(K - 1 DOWNTO 0) := to_signed(2 ** (K - 4), K);
 	CONSTANT W_IDX		: NATURAL := bits_of(RES - 1);
 	CONSTANT CLK_PERIOD	: TIME := 10 ns;
 	CONSTANT RATIO_C	: SIGNED(K - 1 DOWNTO 0) := to_signed(RATIO_FP, K);
 
 	SIGNAL clk		: STD_LOGIC := '0';
+	SIGNAL rst		: STD_LOGIC := '0';
 	SIGNAL en		: STD_LOGIC := '0';
 	SIGNAL center	: SIGNED(K - 1 DOWNTO 0) := (OTHERS => '0');
 	SIGNAL idx		: UNSIGNED(W_IDX - 1 DOWNTO 0) := (OTHERS => '0');
@@ -39,8 +39,6 @@ ARCHITECTURE sim OF tb_idx_to_coord IS
 		CONSTANT idx_n	: NATURAL;
 		CONSTANT z		: NATURAL
 	) RETURN SIGNED IS
-		-- widths match DUT: diff is SIGNED(bits_of(RES-1) DOWNTO 0)
-		-- numeric_std "*" returns L+R bits (= SIGNED(L+R-1 downto 0))
 		CONSTANT DIFF_W	: NATURAL := bits_of(RES - 1) + 1;
 		VARIABLE diff_v	: SIGNED(DIFF_W - 1 DOWNTO 0);
 		VARIABLE prod_v	: SIGNED(RATIO_C'LENGTH + DIFF_W - 1 DOWNTO 0);
@@ -51,6 +49,19 @@ ARCHITECTURE sim OF tb_idx_to_coord IS
 		shift_v := resize(shift_right(prod_v, z + 1), K);
 		RETURN resize(c + shift_v, K);
 	END FUNCTION;
+
+	PROCEDURE do_rst(
+		SIGNAL rst_s	: OUT STD_LOGIC;
+		SIGNAL en_s		: OUT STD_LOGIC;
+		SIGNAL clk_s	: IN STD_LOGIC
+	) IS
+	BEGIN
+		en_s	<= '0';
+		rst_s	<= '1';
+		WAIT UNTIL rising_edge(clk_s);
+		rst_s	<= '0';
+		WAIT FOR 1 ns;
+	END PROCEDURE;
 
 	PROCEDURE apply(
 		CONSTANT c		: SIGNED;
@@ -69,7 +80,7 @@ ARCHITECTURE sim OF tb_idx_to_coord IS
 		en_s		<= '1';
 		WAIT UNTIL rising_edge(clk_s);
 		en_s		<= '0';
-		WAIT FOR 1 ns;  -- combo after registered inputs
+		WAIT FOR 1 ns;
 	END PROCEDURE;
 
 	PROCEDURE check_point(
@@ -97,12 +108,12 @@ BEGIN
 		GENERIC MAP(
 			K		=> K,
 			RES		=> RES,
-			W_IDX	=> W_IDX,
 			W_ZOOM	=> W_ZOOM,
 			RATIO	=> RATIO_C
 		)
 		PORT MAP(
 			clk		=> clk,
+			rst		=> rst,
 			en		=> en,
 			center	=> center,
 			idx		=> idx,
@@ -119,6 +130,8 @@ BEGIN
 		test_runner_setup(runner, runner_cfg);
 
 		WHILE test_suite LOOP
+			do_rst(rst, en, clk);
+
 			IF run("corners_zoom0") THEN
 				check_point(to_signed(0, K), 0, 0, "idx=0 zoom=0 center=0",
 					center, idx, zoom, en, clk, coord, valid);
@@ -130,7 +143,6 @@ BEGIN
 					center, idx, zoom, en, clk, coord, valid);
 
 			ELSIF run("mid_pixel") THEN
-				-- odd RES: middle idx has diff=0 => coord=center
 				check_point(resize(3 * ONE, K), RES / 2, 0, "mid idx => coord=center",
 					center, idx, zoom, en, clk, coord, valid);
 
@@ -145,13 +157,11 @@ BEGIN
 					center, idx, zoom, en, clk, coord, valid);
 
 			ELSIF run("en_hold") THEN
-				WAIT FOR 1 ns;
-				check_equal(valid, '0', "valid starts low");
+				check_equal(valid, '0', "valid after rst");
 
 				check_point(to_signed(0, K), 0, 0, "load before hold",
 					center, idx, zoom, en, clk, coord, valid);
 				held := coord;
-				-- change inputs with en=0: registered state holds; valid sticky
 				center	<= ONE;
 				idx		<= to_unsigned(RES - 1, W_IDX);
 				zoom	<= to_unsigned(1, W_ZOOM);
@@ -160,8 +170,10 @@ BEGIN
 				check_equal(coord, held, "coord must hold when en=0");
 				check_equal(valid, '1', "valid sticky when en=0");
 
+				do_rst(rst, en, clk);
+				check_equal(valid, '0', "valid clears on rst");
+
 			ELSIF run("sweep_idx") THEN
-				-- hits every pixel (small RES) or a few samples (large RES)
 				IF RES <= 16 THEN
 					FOR n IN 0 TO RES - 1 LOOP
 						check_point(to_signed(0, K), n, 0, "sweep zoom=0",

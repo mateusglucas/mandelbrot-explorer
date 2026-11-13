@@ -10,10 +10,10 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
+USE work.utils.all;
 
 ENTITY memory IS
 	GENERIC(
-		W_ADDR	 : NATURAL := 17;
 		W_DATA	 : NATURAL := 3;
 		MEM_SIZE : NATURAL := 76800
 	);
@@ -21,12 +21,12 @@ ENTITY memory IS
 	(
 		clk_wr	 : IN STD_LOGIC;
 		wr_en	 : IN STD_LOGIC;
-		wr_addr	 : IN UNSIGNED(W_ADDR-1 DOWNTO 0);
+		wr_addr	 : IN UNSIGNED(bits_of(MEM_SIZE-1)-1 DOWNTO 0);
 		wr_data	 : IN STD_LOGIC_VECTOR (W_DATA-1 DOWNTO 0);
 
 		clk_rd	 : IN STD_LOGIC;
 		rd_en	 : IN STD_LOGIC;
-		rd_addr	 : IN UNSIGNED(W_ADDR-1 DOWNTO 0);
+		rd_addr	 : IN UNSIGNED(bits_of(MEM_SIZE-1)-1 DOWNTO 0);
 		rd_data	 : OUT STD_LOGIC_VECTOR (W_DATA-1 DOWNTO 0)
 	);
 END memory;

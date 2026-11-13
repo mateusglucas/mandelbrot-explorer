@@ -9,16 +9,16 @@ ENTITY idx_to_coord IS
 	GENERIC(
 		K			: NATURAL:=36;  -- number of bits of coordinates
 		RES		    : NATURAL;      -- pixels resolution
-		W_IDX		: NATURAL:=9;   -- bits_of(RES-1)
 		W_ZOOM		: NATURAL:=5;   -- bits_of(zoom)
 		RATIO		: SIGNED        -- units of coord per pixel at zoom=0
 	);
 	PORT
 	(
 		clk			: IN STD_LOGIC;
+		rst			: IN STD_LOGIC;
 		en			: IN STD_LOGIC;
 		center		: IN SIGNED   (K-1 DOWNTO 0);
-		idx			: IN UNSIGNED (W_IDX-1 DOWNTO 0); -- 0 to RES-1
+		idx			: IN UNSIGNED (bits_of(RES-1)-1 DOWNTO 0); -- 0 to RES-1
 		zoom		: IN UNSIGNED (W_ZOOM-1 DOWNTO 0);
 		coord		: OUT SIGNED  (K-1 DOWNTO 0);
 		valid		: OUT STD_LOGIC
@@ -26,10 +26,12 @@ ENTITY idx_to_coord IS
 END idx_to_coord;
 
 ARCHITECTURE behavioral OF idx_to_coord IS
+CONSTANT W_IDX: NATURAL := bits_of(RES-1);
+
 SIGNAL center_r: SIGNED (K-1 DOWNTO 0);
 SIGNAL idx_r: UNSIGNED (W_IDX-1 DOWNTO 0);
 SIGNAL zoom_r: UNSIGNED (W_ZOOM-1 DOWNTO 0);
-SIGNAL valid_r: STD_LOGIC:='0';
+SIGNAL valid_r: STD_LOGIC;
 
 SIGNAL two_idx: SIGNED (bits_of(2*(RES-1)) DOWNTO 0); -- 0 to 2*(RES-1) -> bits_of(2*(RES-1)) + 1 bits (+1 for sign bit)
 CONSTANT RES_MINUS_1: SIGNED (two_idx'HIGH DOWNTO 0) := TO_SIGNED(RES-1, two_idx'LENGTH);
@@ -50,7 +52,9 @@ BEGIN
 	PROCESS(clk)
 	BEGIN
 		IF RISING_EDGE(clk) THEN
-			IF en='1' THEN
+			IF rst='1' THEN
+				valid_r <= '0';
+			ELSIF en='1' THEN
 				center_r <= center;
 				idx_r <= idx;
 				zoom_r <= zoom;

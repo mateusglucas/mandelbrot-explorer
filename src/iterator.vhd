@@ -4,27 +4,27 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
+USE work.utils.all;
 
 ENTITY iterator IS
 	GENERIC(
-
 		K			: NATURAL:=36;  -- number of bits of fixed point representation
 		I			: NATURAL:=4;   -- number of integer bits (including the sign bit) 
 								    -- worst case is x_c=2-epsilon, y_c=0 -> x_new=2^2+2-epsilon=6-epsilon, y_new=0, 
 								    -- which needs 4 bits in integer part (with sign bit)
 		MAX_ITER	: NATURAL:=255; -- maximum number of iterations
-		W_ADDR		: NATURAL:=17;  -- bits_of(RES_H*RES_V-1)
-		W_ITER		: NATURAL:=8    -- bits_of(MAX_ITER)
+		W_ADDR		: NATURAL:=17   -- bits_of(RES_H*RES_V-1)
 	);
 	PORT
 	(
 		clk			: IN STD_LOGIC; -- clock signal
+		rst			: IN STD_LOGIC; -- reset signal
 		load		: IN STD_LOGIC; -- load signal
 		x_c			: IN SIGNED(K-1 DOWNTO 0); -- real part of the complex number z_c
 		y_c			: IN SIGNED(K-1 DOWNTO 0); -- imaginary part of the complex number z_c
 		addr		: IN UNSIGNED(W_ADDR-1 DOWNTO 0); -- address of the pixel in the framebuffer
 		done		: OUT STD_LOGIC; -- done signal
-		iter		: OUT UNSIGNED(W_ITER-1 DOWNTO 0); -- number of iterations performed
+		iter		: OUT UNSIGNED(bits_of(MAX_ITER)-1 DOWNTO 0); -- number of iterations performed
 		addr_out	: OUT UNSIGNED(W_ADDR-1 DOWNTO 0); -- address of the pixel in the framebuffer
 		empty		: OUT STD_LOGIC  -- ready to receive a new point
 	);
@@ -34,9 +34,9 @@ ARCHITECTURE behavioral OF iterator IS
 
 SIGNAL x_c_r	: SIGNED (K-1 DOWNTO 0);
 SIGNAL y_c_r	: SIGNED (K-1 DOWNTO 0);
-SIGNAL iter_r	: UNSIGNED (W_ITER-1 DOWNTO 0);
+SIGNAL iter_r	: UNSIGNED (bits_of(MAX_ITER)-1 DOWNTO 0);
 SIGNAL addr_r	: UNSIGNED (W_ADDR-1 DOWNTO 0);
-SIGNAL valid	: STD_LOGIC := '0';
+SIGNAL valid	: STD_LOGIC;
 
 SIGNAL xx: 			SIGNED (2*K-1 DOWNTO 0);
 SIGNAL xy: 			SIGNED (2*K-1 DOWNTO 0);
@@ -68,7 +68,9 @@ empty<=(NOT valid) OR done_aux;
 PROCESS(clk)
 BEGIN
 	IF(RISING_EDGE(clk)) THEN
-		IF (load='1') THEN 
+		IF rst='1' THEN
+			valid<='0';
+		ELSIF (load='1') THEN 
 			x_c_r<=x_c;
 			y_c_r<=y_c;
 			x<=x_c;

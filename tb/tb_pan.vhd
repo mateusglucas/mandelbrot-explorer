@@ -1,6 +1,6 @@
 -- VUnit testbench for pan:
 --   center +=/-= max(SHIFT_RIGHT(DELTA, zoom), 1) when inc XOR dec
---   reset clears center to 0
+--   rst clears center to 0
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
@@ -24,7 +24,7 @@ ARCHITECTURE sim OF tb_pan IS
 	CONSTANT DELTA_C	: SIGNED(K - 1 DOWNTO 0) := to_signed(DELTA_FP, K);
 
 	SIGNAL clk		: STD_LOGIC := '0';
-	SIGNAL reset	: STD_LOGIC := '0';
+	SIGNAL rst		: STD_LOGIC := '0';
 	SIGNAL zoom		: UNSIGNED(W_ZOOM - 1 DOWNTO 0) := (OTHERS => '0');
 	SIGNAL inc		: STD_LOGIC := '0';
 	SIGNAL dec_s	: STD_LOGIC := '0';
@@ -46,7 +46,7 @@ ARCHITECTURE sim OF tb_pan IS
 	END PROCEDURE;
 
 	PROCEDURE do_reset(
-		SIGNAL reset_s	: OUT STD_LOGIC;
+		SIGNAL rst_s	: OUT STD_LOGIC;
 		SIGNAL inc_s	: OUT STD_LOGIC;
 		SIGNAL dec_o	: OUT STD_LOGIC;
 		SIGNAL clk_s	: IN STD_LOGIC
@@ -54,9 +54,9 @@ ARCHITECTURE sim OF tb_pan IS
 	BEGIN
 		inc_s	<= '0';
 		dec_o	<= '0';
-		reset_s	<= '1';
+		rst_s	<= '1';
 		tick(clk_s);
-		reset_s	<= '0';
+		rst_s	<= '0';
 		WAIT FOR 1 ns;
 	END PROCEDURE;
 BEGIN
@@ -68,7 +68,7 @@ BEGIN
 		)
 		PORT MAP(
 			clk		=> clk,
-			reset	=> reset,
+			rst		=> rst,
 			zoom	=> zoom,
 			inc		=> inc,
 			dec		=> dec_s,
@@ -89,11 +89,11 @@ BEGIN
 				inc		<= '1';
 				dec_s	<= '0';
 				tick(clk);
-				do_reset(reset, inc, dec_s, clk);
+				do_reset(rst, inc, dec_s, clk);
 				check_equal(center, 0, "center after reset");
 
 			ELSIF run("inc_dec_zoom0") THEN
-				do_reset(reset, inc, dec_s, clk);
+				do_reset(rst, inc, dec_s, clk);
 				zoom <= to_unsigned(0, W_ZOOM);
 				exp := (OTHERS => '0');
 
@@ -117,7 +117,7 @@ BEGIN
 				check_equal(center, exp, "dec once zoom=0");
 
 			ELSIF run("zoom_halves_step") THEN
-				do_reset(reset, inc, dec_s, clk);
+				do_reset(rst, inc, dec_s, clk);
 				zoom	<= to_unsigned(1, W_ZOOM);
 				inc		<= '1';
 				dec_s	<= '0';
@@ -125,7 +125,7 @@ BEGIN
 				WAIT FOR 1 ns;
 				check_equal(center, step_of(1), "inc zoom=1");
 
-				do_reset(reset, inc, dec_s, clk);
+				do_reset(rst, inc, dec_s, clk);
 				zoom	<= to_unsigned(2, W_ZOOM);
 				inc		<= '1';
 				dec_s	<= '0';
@@ -135,7 +135,7 @@ BEGIN
 
 			ELSIF run("clamp_to_one") THEN
 				-- large zoom => SHIFT_RIGHT goes to 0 => step forced to 1
-				do_reset(reset, inc, dec_s, clk);
+				do_reset(rst, inc, dec_s, clk);
 				zoom	<= to_unsigned(K - 2, W_ZOOM);
 				inc		<= '1';
 				dec_s	<= '0';
@@ -150,7 +150,7 @@ BEGIN
 				check_equal(center, to_signed(0, K), "dec clamps to -1");
 
 			ELSIF run("hold") THEN
-				do_reset(reset, inc, dec_s, clk);
+				do_reset(rst, inc, dec_s, clk);
 				zoom	<= to_unsigned(0, W_ZOOM);
 				inc		<= '1';
 				dec_s	<= '0';

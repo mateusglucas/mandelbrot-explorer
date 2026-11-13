@@ -25,6 +25,7 @@ ARCHITECTURE sim OF tb_iterator IS
 	CONSTANT F			: NATURAL := K - I;  -- fractional bits
 
 	SIGNAL clk		: STD_LOGIC := '0';
+	SIGNAL rst		: STD_LOGIC := '0';
 	SIGNAL load		: STD_LOGIC := '0';
 	SIGNAL x_c		: SIGNED(K - 1 DOWNTO 0) := (OTHERS => '0');
 	SIGNAL y_c		: SIGNED(K - 1 DOWNTO 0) := (OTHERS => '0');
@@ -139,11 +140,11 @@ BEGIN
 			K			=> K,
 			I			=> I,
 			MAX_ITER	=> MAX_ITER,
-			W_ADDR		=> W_ADDR,
-			W_ITER		=> W_ITER
+			W_ADDR		=> W_ADDR
 		)
 		PORT MAP(
 			clk			=> clk,
+			rst			=> rst,
 			load		=> load,
 			x_c			=> x_c,
 			y_c			=> y_c,
@@ -161,6 +162,13 @@ BEGIN
 		test_runner_setup(runner, runner_cfg);
 
 		WHILE test_suite LOOP
+			-- known idle state
+			rst		<= '1';
+			load	<= '0';
+			tick(clk);
+			rst		<= '0';
+			WAIT FOR 1 ns;
+
 			IF run("escape_counts") THEN
 				-- different escape depths (real axis)
 				expect_iter(to_fp(3.0), to_fp(0.0), 1, 0, "c=3 -> iter 0",

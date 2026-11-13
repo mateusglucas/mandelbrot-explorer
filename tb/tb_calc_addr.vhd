@@ -23,11 +23,25 @@ ARCHITECTURE sim OF tb_calc_addr IS
 	CONSTANT CLK_PERIOD	: TIME := 10 ns;
 
 	SIGNAL clk		: STD_LOGIC := '0';
+	SIGNAL rst		: STD_LOGIC := '0';
 	SIGNAL en		: STD_LOGIC := '0';
 	SIGNAL row		: UNSIGNED(W_ROW - 1 DOWNTO 0) := (OTHERS => '0');
 	SIGNAL col		: UNSIGNED(W_COL - 1 DOWNTO 0) := (OTHERS => '0');
 	SIGNAL addr		: UNSIGNED(W_ADDR - 1 DOWNTO 0);
 	SIGNAL valid	: STD_LOGIC;
+
+	PROCEDURE do_rst(
+		SIGNAL rst_s	: OUT STD_LOGIC;
+		SIGNAL en_s		: OUT STD_LOGIC;
+		SIGNAL clk_s	: IN STD_LOGIC
+	) IS
+	BEGIN
+		en_s	<= '0';
+		rst_s	<= '1';
+		WAIT UNTIL rising_edge(clk_s);
+		rst_s	<= '0';
+		WAIT FOR 1 ns;
+	END PROCEDURE;
 
 	PROCEDURE check_point(
 		CONSTANT r		: NATURAL;
@@ -54,12 +68,11 @@ BEGIN
 	DUT: ENTITY work.calc_addr
 		GENERIC MAP(
 			RES_H	=> RES_H,
-			W_COL	=> W_COL,
-			W_ROW	=> W_ROW,
-			W_ADDR	=> W_ADDR
+			RES_V	=> RES_V
 		)
 		PORT MAP(
 			clk		=> clk,
+			rst		=> rst,
 			en		=> en,
 			row		=> row,
 			col		=> col,
@@ -75,6 +88,8 @@ BEGIN
 		test_runner_setup(runner, runner_cfg);
 
 		WHILE test_suite LOOP
+			do_rst(rst, en, clk);
+
 			IF run("corners") THEN
 				check_point(0,         0,         "corner 0,0",
 					row, col, en, clk, addr, valid);
@@ -90,19 +105,20 @@ BEGIN
 					row, col, en, clk, addr, valid);
 
 			ELSIF run("en_hold") THEN
-				WAIT FOR 1 ns;
-				check_equal(valid, '0', "valid starts low");
+				check_equal(valid, '0', "valid after rst");
 
 				check_point(1, 2, "load before hold",
 					row, col, en, clk, addr, valid);
 				held := to_integer(addr);
-				-- change inputs with en=0: addr holds; valid stays sticky high
 				row	<= to_unsigned(RES_V - 1, W_ROW);
 				col	<= to_unsigned(RES_H - 1, W_COL);
 				WAIT UNTIL rising_edge(clk);
 				WAIT FOR 1 ns;
 				check_equal(to_integer(addr), held, "addr must hold when en=0");
 				check_equal(valid, '1', "valid sticky when en=0");
+
+				do_rst(rst, en, clk);
+				check_equal(valid, '0', "valid clears on rst");
 			END IF;
 		END LOOP;
 

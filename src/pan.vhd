@@ -13,7 +13,7 @@ ENTITY pan IS
 	PORT
 	(
 		clk			: IN STD_LOGIC;
-		reset		: IN STD_LOGIC;
+		rst			: IN STD_LOGIC;
 		zoom		: IN UNSIGNED (W_ZOOM-1 DOWNTO 0);
 		inc			: IN STD_LOGIC;
 		dec			: IN STD_LOGIC;
@@ -24,14 +24,13 @@ END pan;
 ARCHITECTURE behavioral OF pan IS
 SIGNAL center_i : SIGNED(K-1 DOWNTO 0);
 BEGIN
-
 	center <= center_i;
 
 	PROCESS(clk)
 	VARIABLE delta_shifted : SIGNED(K-1 DOWNTO 0);
 	BEGIN
 		IF RISING_EDGE(clk) THEN
-			IF reset='1' THEN
+			IF rst='1' THEN
 				center_i <= (OTHERS=>'0');
 			ELSIF inc='1' XOR dec='1' THEN
 				delta_shifted := SHIFT_RIGHT(RESIZE(DELTA, K), TO_INTEGER(zoom));

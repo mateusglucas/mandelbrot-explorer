@@ -3,6 +3,7 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
+USE work.utils.all;
 
 LIBRARY vunit_lib;
 CONTEXT vunit_lib.vunit_context;
@@ -10,14 +11,14 @@ CONTEXT vunit_lib.vunit_context;
 ENTITY tb_memory IS
 	GENERIC(
 		runner_cfg	: STRING;
-		W_ADDR		: NATURAL := 5;
 		W_DATA		: NATURAL := 3;
 		MEM_SIZE	: NATURAL := 16
 	);
 END tb_memory;
 
 ARCHITECTURE sim OF tb_memory IS
-	CONSTANT CLK_PERIOD : TIME := 10 ns;
+	CONSTANT W_ADDR		: NATURAL := bits_of(MEM_SIZE - 1);
+	CONSTANT CLK_PERIOD	: TIME := 10 ns;
 
 	SIGNAL clk_wr	: STD_LOGIC := '0';
 	SIGNAL wr_en	: STD_LOGIC := '0';
@@ -71,7 +72,6 @@ ARCHITECTURE sim OF tb_memory IS
 BEGIN
 	DUT: ENTITY work.memory
 		GENERIC MAP(
-			W_ADDR		=> W_ADDR,
 			W_DATA		=> W_DATA,
 			MEM_SIZE	=> MEM_SIZE
 		)
