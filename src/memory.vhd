@@ -1,11 +1,4 @@
--- memoria de 320*240*3 bits, com 320*240 palavras de 3 bits
--- a escrita é feita na borda de subida de wr_clk quando wr_en estiver ativo
--- a leitura é feita na borda de subida de rd, e é feita sequencialmente (primeiro coloca o dado do endereço 0,
--- depois do endereço 1, etc.
--- quando sync='1', os endereços de leitura sao resetados
-
---a memoria é para uma resolução de 320x240. mas utilizei resolução de 640x480 (exatamente o dobro)
---desta forma, leio cada pixel duas vezes e cada linha duas vezes para "simular" uma imagem de 640x480
+-- Dual-port frame buffer (calc write / video read)
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
