@@ -32,3 +32,5 @@ make clean
 
 - [ ] Pipeline the compute path to raise `clk_calc`
 - [ ] Move the framebuffer to external SRAM → higher resolution
+- [ ] Add schematic
+- [ ] Add sample images
