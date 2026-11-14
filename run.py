@@ -25,6 +25,9 @@ lib.add_source_files(ROOT / "src" / "navigator.vhdl")
 lib.add_source_files(ROOT / "src" / "mandelbrot_core.vhdl")
 lib.add_source_files(ROOT / "src" / "uart_rx.vhd")
 lib.add_source_files(ROOT / "src" / "commands.vhd")
+lib.add_source_files(ROOT / "src" / "vga_sync.vhd")
+lib.add_source_files(ROOT / "src" / "palette.vhd")
+lib.add_source_files(ROOT / "src" / "video.vhd")
 lib.add_source_files(ROOT / "tb" / "tb_*.vhd")
 
 # VUnit + GHDL: VHDL-2008 (biblioteca do VUnit exige)
@@ -94,5 +97,8 @@ tb_cmd.add_config(name="default")
 
 tb_uart = lib.entity("tb_uart_rx")
 tb_uart.add_config(name="1M_100k", generics={"CLK_HZ": 1_000_000, "BAUD": 100_000})
+
+tb_vid = lib.entity("tb_video")
+tb_vid.add_config(name="4x3", generics={"RES_H": 4, "RES_V": 3})
 
 vu.main()
