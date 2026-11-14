@@ -23,6 +23,8 @@ lib.add_source_files(ROOT / "src" / "pixel_map.vhd")
 lib.add_source_files(ROOT / "src" / "counter.vhdl")
 lib.add_source_files(ROOT / "src" / "navigator.vhdl")
 lib.add_source_files(ROOT / "src" / "mandelbrot_core.vhdl")
+lib.add_source_files(ROOT / "src" / "uart_rx.vhd")
+lib.add_source_files(ROOT / "src" / "commands.vhd")
 lib.add_source_files(ROOT / "tb" / "tb_*.vhd")
 
 # VUnit + GHDL: VHDL-2008 (biblioteca do VUnit exige)
@@ -86,5 +88,11 @@ tb_nav.add_config(name="z8_d256", generics={"ZOOM_MAX": 8, "DELTA_FP": 256})
 
 tb_mb = lib.entity("tb_mandelbrot_core")
 tb_mb.add_config(name="4x3", generics={"RES_H": 4, "RES_V": 3, "MAX_ITER": 16})
+
+tb_cmd = lib.entity("tb_commands")
+tb_cmd.add_config(name="default")
+
+tb_uart = lib.entity("tb_uart_rx")
+tb_uart.add_config(name="1M_100k", generics={"CLK_HZ": 1_000_000, "BAUD": 100_000})
 
 vu.main()
