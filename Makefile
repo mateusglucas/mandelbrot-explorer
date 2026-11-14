@@ -3,6 +3,8 @@
 #   make sync    — instala deps Python (uv)
 #   make test    — VUnit (p=N paralelo, ARGS='filtro')
 #   make check   — analisa VHDL com GHDL (rápido, sem FPGA)
+#   make lint    — VSG style check (vsg.yaml)
+#   make fmt     — VSG --fix (reescreve .vhd)
 #   make build   — síntese + P&R + bitstream (precisa build.tcl)
 #   make flash   — grava impl/pnr/mandelbrot_explorer.fs na placa
 #   make serial  — abre UART de navegação (screen)
@@ -39,10 +41,12 @@ GHDL_SRCS ?= \
 UV ?= uv
 PYTHON ?= $(UV) run python
 
-.PHONY: help check analyze test test-vunit sync build flash serial uart all clean
+VSG_CFG ?= vsg.yaml
+
+.PHONY: help check analyze test test-vunit sync lint fmt build flash serial uart all clean
 
 help:
-	@echo "targets: sync | test | check | build | flash | serial | all | clean"
+	@echo "targets: sync | test | check | lint | fmt | build | flash | serial | all | clean"
 	@echo "  PORT=$(PORT)  BITSTREAM=$(BITSTREAM)"
 	@echo "  make test p=8"
 
@@ -54,6 +58,13 @@ sync:
 check analyze:
 	ghdl -a --std=08 $(GHDL_SRCS)
 	@echo "ok: GHDL analyze"
+
+# --- estilo VHDL (VSG) ---
+lint:
+	$(UV) run vsg -c $(VSG_CFG) -of summary
+
+fmt:
+	$(UV) run vsg -c $(VSG_CFG) --fix
 
 # --- testes (VUnit descobre TBs em run.py) ---
 #   make test              # 1 processo (padrão)

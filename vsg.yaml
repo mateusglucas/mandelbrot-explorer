@@ -1,0 +1,60 @@
+# VHDL Style Guide — estilo do projeto
+#   keywords VHDL: UPPER
+#   nomes (entity, sinais, etc.): lower
+#   indent: 4 + smart_tabs
+#
+#   make lint  — reporta (deve ficar limpo após make fmt)
+#   make fmt   — aplica --fix
+#
+# Regras unfixable (VSG não inventa nome / não mexe em semântica)
+# ficam desabilitadas ou alinhadas ao estilo do repo.
+
+file_list:
+  - src/**/*.vhd
+  - tb/**/*.vhd
+
+# IPs Gowin (oser10, elvds, PLL…): component black-box — não forçar ENTITY
+file_rules:
+  - src/board/pll.vhd:
+      rule:
+        instantiation_034:
+          disable: true
+  - src/board/main.vhd:
+      rule:
+        instantiation_034:
+          disable: true
+  - src/video/hdmi_tx.vhd:
+      rule:
+        instantiation_034:
+          disable: true
+
+rule:
+  global:
+    indent_size: 4
+    indent_style: smart_tabs
+
+  group:
+    case::keyword:
+      case: upper
+    case::name:
+      case: lower
+    case::label:
+      case: upper
+
+  # smart_tabs usa TAB; esta regra força só espaços
+  whitespace_002:
+    disable: true
+
+  # instanciação direta de entity (não component)
+  instantiation_034:
+    method: entity
+
+  # sem (architecture) na instanciação
+  instantiation_036:
+    action: remove
+
+  # labels de process: VSG não inventa nomes (unfixable)
+  process_016:
+    disable: true
+  process_018:
+    action: remove
