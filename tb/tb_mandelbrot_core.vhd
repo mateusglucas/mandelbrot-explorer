@@ -1,4 +1,4 @@
--- Smoke test for mandelbrot top: reset → pixels written → nav pulse restarts
+-- Smoke test for mandelbrot_core: reset → pixels written → nav pulse restarts
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
@@ -8,7 +8,7 @@ USE work.utils.all;
 LIBRARY vunit_lib;
 CONTEXT vunit_lib.vunit_context;
 
-ENTITY tb_mandelbrot IS
+ENTITY tb_mandelbrot_core IS
 	GENERIC(
 		runner_cfg	: STRING;
 		K			: NATURAL := 16;
@@ -21,9 +21,9 @@ ENTITY tb_mandelbrot IS
 		DELTA_FP	: INTEGER := 256;
 		RATIO_FP	: INTEGER := 4096
 	);
-END tb_mandelbrot;
+END tb_mandelbrot_core;
 
-ARCHITECTURE sim OF tb_mandelbrot IS
+ARCHITECTURE sim OF tb_mandelbrot_core IS
 	CONSTANT CLK_PERIOD	: TIME := 10 ns;
 	CONSTANT N_PIX		: NATURAL := RES_H * RES_V;
 	CONSTANT W_ADDR		: NATURAL := bits_of(N_PIX - 1);
@@ -39,7 +39,7 @@ ARCHITECTURE sim OF tb_mandelbrot IS
 	SIGNAL inc_zoom		: STD_LOGIC := '0';
 	SIGNAL dec_zoom		: STD_LOGIC := '0';
 	SIGNAL clk_rd		: STD_LOGIC := '0';
-	SIGNAL rd_en		: STD_LOGIC := '0';
+	SIGNAL rd_en		: STD_LOGIC := '1';
 	SIGNAL rd_addr		: UNSIGNED(W_ADDR - 1 DOWNTO 0) := (OTHERS => '0');
 	SIGNAL rd_data		: STD_LOGIC_VECTOR(W_DATA - 1 DOWNTO 0);
 
@@ -47,7 +47,7 @@ BEGIN
 	clk <= NOT clk AFTER CLK_PERIOD / 2;
 	clk_rd <= clk;
 
-	DUT: ENTITY work.mandelbrot
+	DUT: ENTITY work.mandelbrot_core
 		GENERIC MAP(
 			K			=> K,
 			I			=> I,
@@ -68,6 +68,7 @@ BEGIN
 			dec_y		=> dec_y,
 			inc_zoom	=> inc_zoom,
 			dec_zoom	=> dec_zoom,
+			zoom_out	=> OPEN,
 			clk_rd		=> clk_rd,
 			rd_en		=> rd_en,
 			rd_addr		=> rd_addr,
@@ -86,20 +87,17 @@ BEGIN
 				WAIT UNTIL rising_edge(clk);
 				rst <= '0';
 
-				-- enough cycles: map latency + worst-case MAX_ITER per pixel
 				FOR n IN 1 TO N_PIX * (MAX_ITER + 8) + 64 LOOP
 					WAIT UNTIL rising_edge(clk);
 				END LOOP;
 
-				rd_en <= '1';
 				FOR a IN 0 TO N_PIX - 1 LOOP
 					rd_addr <= to_unsigned(a, W_ADDR);
 					WAIT UNTIL rising_edge(clk);
-					WAIT UNTIL rising_edge(clk);  -- sync read
+					WAIT UNTIL rising_edge(clk);
 					v := rd_data;
 					check(v /= "XXX", "mem[" & integer'image(a) & "] uninitialized");
 				END LOOP;
-				rd_en <= '0';
 
 			ELSIF run("nav_restarts") THEN
 				rst <= '1';
@@ -107,12 +105,10 @@ BEGIN
 				WAIT UNTIL rising_edge(clk);
 				rst <= '0';
 
-				-- let a few pixels complete
 				FOR n IN 1 TO (MAX_ITER + 8) * 3 + 32 LOOP
 					WAIT UNTIL rising_edge(clk);
 				END LOOP;
 
-				-- pan pulse → compute path resets and runs again
 				inc_x <= '1';
 				WAIT UNTIL rising_edge(clk);
 				inc_x <= '0';
@@ -121,12 +117,10 @@ BEGIN
 					WAIT UNTIL rising_edge(clk);
 				END LOOP;
 
-				rd_en <= '1';
 				rd_addr <= to_unsigned(0, W_ADDR);
 				WAIT UNTIL rising_edge(clk);
 				WAIT UNTIL rising_edge(clk);
 				check(rd_data /= "XXX", "mem after nav still readable");
-				rd_en <= '0';
 			END IF;
 		END LOOP;
 

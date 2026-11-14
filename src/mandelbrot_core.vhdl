@@ -1,7 +1,7 @@
--- mandelbrot: top compute path
---   UART (later) → navigator
+-- mandelbrot_core: fractal compute path
+--   UART → navigator
 --   scheduler → pixel_map → iterator → memory
---   video (later) reads memory
+--   video reads memory (clk_rd domain)
 --
 -- Control:
 --   en(scheduler, pixel_map) = empty
@@ -15,7 +15,7 @@ USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
 USE work.utils.all;
 
-ENTITY mandelbrot IS
+ENTITY mandelbrot_core IS
 	GENERIC(
 		K			: NATURAL := 36;
 		I			: NATURAL := 4;
@@ -23,7 +23,7 @@ ENTITY mandelbrot IS
 		RES_V		: NATURAL := 240;
 		MAX_ITER	: NATURAL := 255;
 		ZOOM_MAX	: NATURAL := 31;
-		W_DATA		: NATURAL := 3;
+		W_DATA		: NATURAL := 8;	-- store iter bits for palette
 		DELTA		: SIGNED;		-- pan step at zoom=0
 		RATIO		: SIGNED;		-- coord units per pixel at zoom=0
 		LAT_COORD	: NATURAL := 1;
@@ -33,7 +33,7 @@ ENTITY mandelbrot IS
 		clk			: IN  STD_LOGIC;
 		rst			: IN  STD_LOGIC;		-- global reset
 
-		-- nav pulses (from UART later)
+		-- nav pulses (from UART / commands)
 		inc_x		: IN  STD_LOGIC;
 		dec_x		: IN  STD_LOGIC;
 		inc_y		: IN  STD_LOGIC;
@@ -41,15 +41,17 @@ ENTITY mandelbrot IS
 		inc_zoom	: IN  STD_LOGIC;
 		dec_zoom	: IN  STD_LOGIC;
 
-		-- memory read port (video later)
+		zoom_out	: OUT UNSIGNED(bits_of(ZOOM_MAX) - 1 DOWNTO 0);
+
+		-- memory read port (video)
 		clk_rd		: IN  STD_LOGIC;
 		rd_en		: IN  STD_LOGIC;
 		rd_addr		: IN  UNSIGNED(bits_of(RES_H * RES_V - 1) - 1 DOWNTO 0);
 		rd_data		: OUT STD_LOGIC_VECTOR(W_DATA - 1 DOWNTO 0)
 	);
-END mandelbrot;
+END mandelbrot_core;
 
-ARCHITECTURE structural OF mandelbrot IS
+ARCHITECTURE structural OF mandelbrot_core IS
 	CONSTANT W_ZOOM		: NATURAL := bits_of(ZOOM_MAX);
 	CONSTANT W_ADDR		: NATURAL := bits_of(RES_H * RES_V - 1);
 	CONSTANT W_ITER		: NATURAL := bits_of(MAX_ITER);
@@ -90,8 +92,8 @@ BEGIN
 	en   <= empty;
 	load <= empty AND valid_out;
 
-	-- colour: top W_DATA bits of iteration count
-	wr_data <= std_logic_vector(iter(W_ITER - 1 DOWNTO W_ITER - W_DATA));
+	-- store low W_DATA bits of iter (palette expects raw count)
+	wr_data <= std_logic_vector(resize(iter, W_DATA));
 
 	u_nav: ENTITY work.navigator
 		GENERIC MAP(
@@ -112,6 +114,7 @@ BEGIN
 			center_y	=> center_y,
 			zoom		=> zoom
 		);
+	zoom_out <= zoom;
 
 	u_sched: ENTITY work.scheduler
 		GENERIC MAP(
