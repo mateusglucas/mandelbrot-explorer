@@ -11,17 +11,21 @@ To flash and open the serial port without `sudo`:
 ./tools/setup_fpga_access.sh
 ```
 
-Log out and back in afterward (`dialout` group + FTDI udev rule).
+Then log out and back in (`dialout` group + FTDI udev rule).
 
 ## Build
 
 ```bash
-make sync
-make test
-make lint
-make build
+make sync      # Python deps (uv)
+make test      # VUnit (make test p=8 ARGS='*tb_pipe*')
+make check     # GHDL analyze
+make lint      # VSG
+make fmt       # VSG --fix
+make build     # Gowin bitstream
 make flash
-make serial   # default: /dev/ttyUSB1
+make serial    # UART nav (default: /dev/ttyUSB1)
+make all       # build && flash
+make clean
 ```
 
 ## TODO
