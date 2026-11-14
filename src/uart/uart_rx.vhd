@@ -2,80 +2,99 @@
 -- valid is high for one clk cycle when a full byte is in data
 
 LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+	USE ieee.std_logic_1164.ALL;
+	USE ieee.numeric_std.ALL;
 
 ENTITY uart_rx IS
-	GENERIC(
-		CLK_HZ	: NATURAL := 81_000_000;
-		BAUD	: NATURAL := 115_200
+	GENERIC (
+		clk_hz	: natural := 81_000_000;
+		baud      : natural := 115_200
 	);
-	PORT(
-		clk		: IN  STD_LOGIC;
-		rx		: IN  STD_LOGIC;
-		data	: OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-		valid	: OUT STD_LOGIC
+	PORT (
+		clk   : IN    std_logic;
+		rx    : IN    std_logic;
+		data  : OUT   std_logic_vector(7 DOWNTO 0);
+		valid : OUT   std_logic
 	);
-END uart_rx;
+END ENTITY uart_rx;
 
 ARCHITECTURE behavioral OF uart_rx IS
-	CONSTANT CYCLES_BIT : NATURAL := CLK_HZ / BAUD;
-	TYPE state_t IS (IDLE, START, RECV, STOP);
-	SIGNAL state	: state_t := IDLE;
-	SIGNAL rx_sync	: STD_LOGIC_VECTOR(2 DOWNTO 0) := (OTHERS => '1');
-	SIGNAL cnt		: NATURAL RANGE 0 TO CYCLES_BIT - 1 := 0;
-	SIGNAL bit_idx	: NATURAL RANGE 0 TO 7 := 0;
-	SIGNAL shift	: STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
+
+	CONSTANT cycles_bit : natural := clk_hz / baud;
+
+	TYPE state_t IS (idle, start, recv, stop);
+
+	SIGNAL state      : state_t;
+	SIGNAL rx_sync	: std_logic_vector(2 DOWNTO 0);
+	SIGNAL cnt		: natural RANGE 0 TO cycles_bit - 1;
+	SIGNAL bit_idx	: natural RANGE 0 TO 7;
+	SIGNAL shift      : std_logic_vector(7 DOWNTO 0);
+
 BEGIN
+
 	data <= shift;
 
-	PROCESS(clk)
+	PROCESS (clk) IS
 	BEGIN
+
 		IF RISING_EDGE(clk) THEN
 			rx_sync <= rx_sync(1 DOWNTO 0) & rx;
-			valid <= '0';
+			valid   <= '0';
+
 			CASE state IS
-				WHEN IDLE =>
+
+				WHEN idle =>
+
 					cnt <= 0;
-					IF rx_sync(2) = '0' THEN
-						state <= START;
+					IF (rx_sync(2) = '0') THEN
+						state <= start;
 					END IF;
-				WHEN START =>
+
+				WHEN start =>
+
 					-- wait half bit and confirm start still low
-					IF cnt < CYCLES_BIT / 2 THEN
+					IF (cnt < cycles_bit / 2) THEN
 						cnt <= cnt + 1;
 					ELSE
-						cnt <= 0;
+						cnt     <= 0;
 						bit_idx <= 0;
-						IF rx_sync(2) = '0' THEN
-							state <= RECV;
+						IF (rx_sync(2) = '0') THEN
+							state <= recv;
 						ELSE
-							state <= IDLE;
+							state <= idle;
 						END IF;
 					END IF;
-				WHEN RECV =>
-					IF cnt < CYCLES_BIT - 1 THEN
+
+				WHEN recv =>
+
+					IF (cnt < cycles_bit - 1) THEN
 						cnt <= cnt + 1;
 					ELSE
-						cnt <= 0;
+						cnt   <= 0;
 						shift <= rx_sync(2) & shift(7 DOWNTO 1);
-						IF bit_idx < 7 THEN
+						IF (bit_idx < 7) THEN
 							bit_idx <= bit_idx + 1;
 						ELSE
-							state <= STOP;
+							state <= stop;
 						END IF;
 					END IF;
-				WHEN STOP =>
-					IF cnt < CYCLES_BIT - 1 THEN
+
+				WHEN stop =>
+
+					IF (cnt < cycles_bit - 1) THEN
 						cnt <= cnt + 1;
 					ELSE
 						cnt <= 0;
-						IF rx_sync(2) = '1' THEN
+						IF (rx_sync(2) = '1') THEN
 							valid <= '1';
 						END IF;
-						state <= IDLE;
+						state <= idle;
 					END IF;
+
 			END CASE;
+
 		END IF;
+
 	END PROCESS;
-END behavioral;
+
+END ARCHITECTURE behavioral;

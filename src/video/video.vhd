@@ -9,83 +9,91 @@
 --   3: palette RGB; sync delayed to match
 
 LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
-USE work.utils.all;
+	USE ieee.std_logic_1164.ALL;
+	USE ieee.numeric_std.ALL;
+	USE work.utils.ALL;
 
 ENTITY video IS
-	GENERIC(
-		RES_H	: NATURAL := 320;
-		RES_V	: NATURAL := 240;
-		W_DATA	: NATURAL := 8
+	GENERIC (
+		res_h     : natural := 320;
+		res_v     : natural := 240;
+		w_data	: natural := 8
 	);
-	PORT(
-		clk			: IN  STD_LOGIC;
+	PORT (
+		clk : IN    std_logic;
 		-- memory read
-		rd_en		: OUT STD_LOGIC;
-		rd_addr		: OUT UNSIGNED(bits_of(RES_H * RES_V - 1) - 1 DOWNTO 0);
-		rd_data		: IN  STD_LOGIC_VECTOR(W_DATA - 1 DOWNTO 0);
+		rd_en   : OUT   std_logic;
+		rd_addr : OUT   unsigned(bits_of(res_h * res_v - 1) - 1 DOWNTO 0);
+		rd_data : IN    std_logic_vector(w_data - 1 DOWNTO 0);
 		-- display
-		rgb			: OUT STD_LOGIC_VECTOR(23 DOWNTO 0);
-		h_sync		: OUT STD_LOGIC;
-		v_sync		: OUT STD_LOGIC;
-		de			: OUT STD_LOGIC
+		rgb    : OUT   std_logic_vector(23 DOWNTO 0);
+		h_sync : OUT   std_logic;
+		v_sync : OUT   std_logic;
+		de     : OUT   std_logic
 	);
-END video;
+END ENTITY video;
 
 ARCHITECTURE structural OF video IS
-	CONSTANT W_ADDR : NATURAL := bits_of(RES_H * RES_V - 1);
 
-	SIGNAL px, py			: UNSIGNED(9 DOWNTO 0);
-	SIGNAL de0, hs0, vs0	: STD_LOGIC;
-	SIGNAL de_d				: STD_LOGIC_VECTOR(2 DOWNTO 0) := (OTHERS => '0');
-	SIGNAL hs_d				: STD_LOGIC_VECTOR(2 DOWNTO 0) := (OTHERS => '0');
-	SIGNAL vs_d				: STD_LOGIC_VECTOR(2 DOWNTO 0) := (OTHERS => '0');
+	CONSTANT w_addr : natural := bits_of(res_h * res_v - 1);
 
-	SIGNAL fb_x				: UNSIGNED(bits_of(RES_H - 1) - 1 DOWNTO 0);
-	SIGNAL fb_y				: UNSIGNED(bits_of(RES_V - 1) - 1 DOWNTO 0);
-	SIGNAL addr_comb		: UNSIGNED(W_ADDR - 1 DOWNTO 0);
-	SIGNAL iter8			: STD_LOGIC_VECTOR(7 DOWNTO 0);
+	SIGNAL px, py : unsigned(9 DOWNTO 0);
+	SIGNAL de0    : std_logic;
+	SIGNAL hs0    : std_logic;
+	SIGNAL vs0    : std_logic;
+	SIGNAL de_d   : std_logic_vector(2 DOWNTO 0);
+	SIGNAL hs_d   : std_logic_vector(2 DOWNTO 0);
+	SIGNAL vs_d   : std_logic_vector(2 DOWNTO 0);
+
+	SIGNAL fb_x      : unsigned(bits_of(res_h - 1) - 1 DOWNTO 0);
+	SIGNAL fb_y      : unsigned(bits_of(res_v - 1) - 1 DOWNTO 0);
+	SIGNAL addr_comb : unsigned(w_addr - 1 DOWNTO 0);
+	SIGNAL iter8     : std_logic_vector(7 DOWNTO 0);
+
 BEGIN
-	SYNC: ENTITY work.vga_sync
-		PORT MAP(
+
+	SYNC : ENTITY work.vga_sync
+		PORT MAP (
 			clk			=> clk,
-			v_sync		=> vs0,
-			h_sync		=> hs0,
+			v_sync         => vs0,
+			h_sync         => hs0,
 			active_area	=> de0,
-			x			=> px,
-			y			=> py
+			x              => px,
+			y              => py
 		);
 
 	-- 2x pixel and line repeat: screen (px,py) → FB (px/2, py/2)
 	-- IMPORTANT: unsigned * natural keeps left'length — must widen before *RES_H
 	-- (Tang: to_unsigned(RES_H,9)*a_m+b_m). Otherwise addr wraps every 256 and shears.
-	fb_x <= resize(px(9 DOWNTO 1), fb_x'length);
-	fb_y <= resize(py(9 DOWNTO 1), fb_y'length);
-	addr_comb <= resize(to_unsigned(RES_H, 9) * fb_y + resize(fb_x, 9), W_ADDR);
+	fb_x      <= resize(px(9 DOWNTO 1), fb_x'LENGTH);
+	fb_y      <= resize(py(9 DOWNTO 1), fb_y'LENGTH);
+	addr_comb <= resize(to_unsigned(res_h, 9) * fb_y + resize(fb_x, 9), w_addr);
 
-	PROCESS(clk)
+	PROCESS (clk) IS
 	BEGIN
+
 		IF RISING_EDGE(clk) THEN
-			rd_en  <= '1';
+			rd_en   <= '1';
 			rd_addr <= addr_comb;
-			de_d <= de_d(1 DOWNTO 0) & de0;
-			hs_d <= hs_d(1 DOWNTO 0) & hs0;
-			vs_d <= vs_d(1 DOWNTO 0) & vs0;
+			de_d    <= de_d(1 DOWNTO 0) & de0;
+			hs_d    <= hs_d(1 DOWNTO 0) & hs0;
+			vs_d    <= vs_d(1 DOWNTO 0) & vs0;
 		END IF;
+
 	END PROCESS;
 
 	-- zero-extend / truncate stored data to 8-bit iter for palette
 	iter8 <= STD_LOGIC_VECTOR(resize(UNSIGNED(rd_data), 8));
 
-	PAL: ENTITY work.palette
-		PORT MAP(
-			clk		=> clk,
-			iter	=> iter8,
-			rgb		=> rgb
+	PAL : ENTITY work.palette
+		PORT MAP (
+			clk  => clk,
+			iter => iter8,
+			rgb  => rgb
 		);
 
 	h_sync <= hs_d(2);
 	v_sync <= vs_d(2);
 	de     <= de_d(2);
-END structural;
+
+END ARCHITECTURE structural;

@@ -4,46 +4,49 @@
 -- where RES_H is the horizontal resolution of the screen, row is the row of the pixel and col is the column of the pixel.
 
 LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
-USE work.utils.all;
+	USE ieee.std_logic_1164.ALL;
+	USE ieee.numeric_std.ALL;
+	USE work.utils.ALL;
 
 ENTITY calc_addr IS
 	GENERIC (
-		RES_H	: NATURAL := 320;
-		RES_V	: NATURAL := 240
+		res_h	: natural := 320;
+		res_v	: natural := 240
 	);
-	PORT
-	(
-		clk		  : IN STD_LOGIC;
-		rst		  : IN STD_LOGIC;
-		en		  : IN STD_LOGIC;
-		valid_in  : IN STD_LOGIC;
-		row		  : IN UNSIGNED (bits_of(RES_V-1)-1 DOWNTO 0);
-		col 	  : IN UNSIGNED (bits_of(RES_H-1)-1 DOWNTO 0);
-		addr	  : OUT UNSIGNED (bits_of(RES_H*RES_V-1)-1 DOWNTO 0);
-		valid_out : OUT STD_LOGIC
+	PORT (
+		clk       : IN    std_logic;
+		rst       : IN    std_logic;
+		en        : IN    std_logic;
+		valid_in  : IN    std_logic;
+		row       : IN    unsigned(bits_of(res_v - 1) - 1 DOWNTO 0);
+		col 	  : IN    unsigned(bits_of(res_h - 1) - 1 DOWNTO 0);
+		addr	  : OUT   unsigned(bits_of(res_h * res_v - 1) - 1 DOWNTO 0);
+		valid_out : OUT   std_logic
 	);
-END calc_addr;
+END ENTITY calc_addr;
 
 ARCHITECTURE structural OF calc_addr IS
-SIGNAL valid_out_r: STD_LOGIC;
 
-CONSTANT W_ADDR: NATURAL := bits_of(RES_H*RES_V-1);
+	SIGNAL valid_out_r : std_logic;
 
-BEGIN			
-	valid_out<=valid_out_r;
+	CONSTANT w_addr : natural := bits_of(res_h * res_v - 1);
 
-	PROCESS(clk)
+BEGIN
+
+	valid_out <= valid_out_r;
+
+	PROCESS (clk) IS
 	BEGIN
+
 		IF RISING_EDGE(clk) THEN
-			IF rst='1' THEN
+			IF (rst = '1') THEN
 				valid_out_r <= '0';
-			ELSIF en='1' THEN
-				addr <= resize(to_unsigned(RES_H, bits_of(RES_H)) * row, W_ADDR) + resize(col, W_ADDR);
+			ELSIF (en = '1') THEN
+				addr        <= resize(to_unsigned(res_h, bits_of(res_h)) * row, w_addr) + resize(col, w_addr);
 				valid_out_r <= valid_in;
 			END IF;
 		END IF;
+
 	END PROCESS;
 
-END structural;
+END ARCHITECTURE structural;

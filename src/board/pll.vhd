@@ -1,94 +1,95 @@
---PLL do GW2AR-18C (rPLL)
---CLKOUT = FCLKIN*(FBDIV_SEL+1)/(IDIV_SEL+1); VCO = CLKOUT*ODIV_SEL (deve ficar entre 500 e 1250 MHz)
+-- PLL do GW2AR-18C (rPLL)
+-- CLKOUT = FCLKIN*(FBDIV_SEL+1)/(IDIV_SEL+1); VCO = CLKOUT*ODIV_SEL (deve ficar entre 500 e 1250 MHz)
+
 LIBRARY ieee;
-USE ieee.std_logic_1164.all;
+	USE ieee.std_logic_1164.ALL;
 
 ENTITY pll IS
-	GENERIC(
-		FCLKIN		: STRING:="27";
-		IDIV_SEL		: INTEGER:=0;
-		FBDIV_SEL	: INTEGER:=2;
-		ODIV_SEL		: INTEGER:=8
+	GENERIC (
+		fclkin    : string  := "27";
+		idiv_sel  : integer := 0;
+		fbdiv_sel : integer := 2;
+		odiv_sel  : integer := 8
 	);
-	PORT
-	(
-		clkin		: IN STD_LOGIC;
-		clkout	: OUT STD_LOGIC;
-		lock		: OUT STD_LOGIC
+	PORT (
+		clkin  : IN    std_logic;
+		clkout : OUT   std_logic;
+		lock   : OUT   std_logic
 	);
-END pll;
+END ENTITY pll;
 
 ARCHITECTURE structural OF pll IS
 
-COMPONENT rPLL
-	GENERIC (
-		FCLKIN : STRING := "100.0";
-		DEVICE : STRING := "GW2A-18";
-		DYN_IDIV_SEL : STRING := "false";
-		IDIV_SEL : INTEGER := 0;
-		DYN_FBDIV_SEL : STRING := "false";
-		FBDIV_SEL : INTEGER := 0;
-		DYN_ODIV_SEL : STRING := "false";
-		ODIV_SEL : INTEGER := 8;
-		PSDA_SEL : STRING := "0000";
-		DYN_DA_EN : STRING := "false";
-		DUTYDA_SEL : STRING := "1000";
-		CLKOUT_FT_DIR : BIT := '1';
-		CLKOUTP_FT_DIR : BIT := '1';
-		CLKOUT_DLY_STEP : INTEGER := 0;
-		CLKOUTP_DLY_STEP : INTEGER := 0;
-		CLKOUTD3_SRC : STRING := "CLKOUT";
-		CLKFB_SEL : STRING := "internal";
-		CLKOUT_BYPASS : STRING := "false";
-		CLKOUTP_BYPASS : STRING := "false";
-		CLKOUTD_BYPASS : STRING := "false";
-		CLKOUTD_SRC : STRING := "CLKOUT";
-		DYN_SDIV_SEL : INTEGER := 2
-	);
-	PORT (
-		CLKIN : IN STD_LOGIC;
-		CLKFB : IN STD_LOGIC := '0';
-		IDSEL : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
-		FBDSEL : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
-		ODSEL : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
-		RESET : IN STD_LOGIC := '0';
-		RESET_P : IN STD_LOGIC := '0';
-		PSDA, FDLY : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-		DUTYDA : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-		LOCK : OUT STD_LOGIC;
-		CLKOUT : OUT STD_LOGIC;
-		CLKOUTD : OUT STD_LOGIC;
-		CLKOUTP : OUT STD_LOGIC;
-		CLKOUTD3 : OUT STD_LOGIC
-	);
-END COMPONENT;
+	COMPONENT rpll IS
+		GENERIC (
+			fclkin           : string := "100.0";
+			device           : string := "GW2A-18";
+			dyn_idiv_sel     : string := "false";
+			idiv_sel         : integer := 0;
+			dyn_fbdiv_sel    : string := "false";
+			fbdiv_sel        : integer := 0;
+			dyn_odiv_sel     : string := "false";
+			odiv_sel         : integer := 8;
+			psda_sel         : string := "0000";
+			dyn_da_en        : string := "false";
+			dutyda_sel       : string := "1000";
+			clkout_ft_dir    : bit := '1';
+			clkoutp_ft_dir   : bit := '1';
+			clkout_dly_step  : integer := 0;
+			clkoutp_dly_step : integer := 0;
+			clkoutd3_src     : string := "CLKOUT";
+			clkfb_sel        : string := "internal";
+			clkout_bypass    : string := "false";
+			clkoutp_bypass   : string := "false";
+			clkoutd_bypass   : string := "false";
+			clkoutd_src      : string := "CLKOUT";
+			dyn_sdiv_sel     : integer := 2
+		);
+		PORT (
+			clkin    : IN    std_logic;
+			clkfb    : IN    std_logic;
+			idsel    : IN    std_logic_vector(5 DOWNTO 0);
+			fbdsel   : IN    std_logic_vector(5 DOWNTO 0);
+			odsel    : IN    std_logic_vector(5 DOWNTO 0);
+			reset    : IN    std_logic;
+			reset_p  : IN    std_logic;
+			psda     : IN    std_logic_vector(3 DOWNTO 0);
+			fdly     : IN    std_logic_vector(3 DOWNTO 0);
+			dutyda   : IN    std_logic_vector(3 DOWNTO 0);
+			lock     : OUT   std_logic;
+			clkout   : OUT   std_logic;
+			clkoutd  : OUT   std_logic;
+			clkoutp  : OUT   std_logic;
+			clkoutd3 : OUT   std_logic
+		);
+	END COMPONENT rpll;
 
 BEGIN
 
-	PLL_INST: rPLL
-	GENERIC MAP(
-		FCLKIN => FCLKIN,
-		DEVICE => "GW2AR-18C",
-		IDIV_SEL => IDIV_SEL,
-		FBDIV_SEL => FBDIV_SEL,
-		ODIV_SEL => ODIV_SEL
-	)
-	PORT MAP(
-		CLKIN => clkin,
-		CLKFB => '0',
-		IDSEL => (OTHERS=>'0'),
-		FBDSEL => (OTHERS=>'0'),
-		ODSEL => (OTHERS=>'0'),
-		RESET => '0',
-		RESET_P => '0',
-		PSDA => (OTHERS=>'0'),
-		FDLY => (OTHERS=>'0'),
-		DUTYDA => (OTHERS=>'0'),
-		LOCK => lock,
-		CLKOUT => clkout,
-		CLKOUTD => OPEN,
-		CLKOUTP => OPEN,
-		CLKOUTD3 => OPEN
-	);
+	PLL_INST : COMPONENT rpll
+		GENERIC MAP (
+			fclkin    => fclkin,
+			device    => "GW2AR-18C",
+			idiv_sel  => idiv_sel,
+			fbdiv_sel => fbdiv_sel,
+			odiv_sel  => odiv_sel
+		)
+		PORT MAP (
+			clkin    => clkin,
+			clkfb    => '0',
+			idsel    => (OTHERS => '0'),
+			fbdsel   => (OTHERS => '0'),
+			odsel    => (OTHERS => '0'),
+			reset    => '0',
+			reset_p  => '0',
+			psda     => (OTHERS => '0'),
+			fdly     => (OTHERS => '0'),
+			dutyda   => (OTHERS => '0'),
+			lock     => lock,
+			clkout   => clkout,
+			clkoutd  => OPEN,
+			clkoutp  => OPEN,
+			clkoutd3 => OPEN
+		);
 
-END structural;
+END ARCHITECTURE structural;

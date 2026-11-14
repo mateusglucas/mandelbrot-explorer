@@ -2,40 +2,45 @@
 -- zoom feeds both pan blocks; DELTA shared (same step on X and Y).
 
 LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
-USE work.utils.all;
+	USE ieee.std_logic_1164.ALL;
+	USE ieee.numeric_std.ALL;
+	USE work.utils.ALL;
 
 ENTITY navigator IS
-	GENERIC(
-		K			: NATURAL := 36;
-		ZOOM_MAX	: NATURAL := 31;
-		DELTA		: SIGNED
+	GENERIC (
+		k           : natural := 36;
+		zoom_max	: natural := 31;
+		delta       : signed
 	);
-	PORT(
-		clk			: IN  STD_LOGIC;
-		rst			: IN  STD_LOGIC;
-		inc_x		: IN  STD_LOGIC;
-		dec_x		: IN  STD_LOGIC;
-		inc_y		: IN  STD_LOGIC;
-		dec_y		: IN  STD_LOGIC;
-		inc_zoom	: IN  STD_LOGIC;
-		dec_zoom	: IN  STD_LOGIC;
-		center_x	: OUT SIGNED(K - 1 DOWNTO 0);
-		center_y	: OUT SIGNED(K - 1 DOWNTO 0);
-		zoom		: OUT UNSIGNED(bits_of(ZOOM_MAX) - 1 DOWNTO 0)
+	PORT (
+		clk      : IN    std_logic;
+		rst      : IN    std_logic;
+		inc_x    : IN    std_logic;
+		dec_x    : IN    std_logic;
+		inc_y    : IN    std_logic;
+		dec_y    : IN    std_logic;
+		inc_zoom : IN    std_logic;
+		dec_zoom : IN    std_logic;
+		center_x : OUT   signed(k - 1 DOWNTO 0);
+		center_y : OUT   signed(k - 1 DOWNTO 0);
+		zoom     : OUT   unsigned(bits_of(zoom_max) - 1 DOWNTO 0)
 	);
-END navigator;
+END ENTITY navigator;
 
 ARCHITECTURE structural OF navigator IS
-	CONSTANT W_ZOOM : NATURAL := bits_of(ZOOM_MAX);
-	SIGNAL zoom_i	: UNSIGNED(W_ZOOM - 1 DOWNTO 0);
+
+	CONSTANT w_zoom    : natural := bits_of(zoom_max);
+	SIGNAL   zoom_i	: unsigned(w_zoom - 1 DOWNTO 0);
+
 BEGIN
+
 	zoom <= zoom_i;
 
-	u_zoom: ENTITY work.counter
-		GENERIC MAP(MAX => ZOOM_MAX)
-		PORT MAP(
+	U_ZOOM : ENTITY work.counter
+		GENERIC MAP (
+			max => zoom_max
+		)
+		PORT MAP (
 			clk	=> clk,
 			rst	=> rst,
 			inc	=> inc_zoom,
@@ -43,33 +48,34 @@ BEGIN
 			cnt	=> zoom_i
 		);
 
-	u_pan_x: ENTITY work.pan
-		GENERIC MAP(
-			K		=> K,
-			W_ZOOM	=> W_ZOOM,
-			DELTA	=> DELTA
+	U_PAN_X : ENTITY work.pan
+		GENERIC MAP (
+			k         => k,
+			w_zoom	=> W_ZOOM,
+			delta     => delta
 		)
-		PORT MAP(
-			clk		=> clk,
-			rst		=> rst,
-			zoom	=> zoom_i,
-			inc		=> inc_x,
-			dec		=> dec_x,
+		PORT MAP (
+			clk       => clk,
+			rst       => rst,
+			zoom      => zoom_i,
+			inc       => inc_x,
+			dec       => dec_x,
 			center	=> center_x
 		);
 
-	u_pan_y: ENTITY work.pan
-		GENERIC MAP(
-			K		=> K,
-			W_ZOOM	=> W_ZOOM,
-			DELTA	=> DELTA
+	U_PAN_Y : ENTITY work.pan
+		GENERIC MAP (
+			k         => k,
+			w_zoom	=> W_ZOOM,
+			delta     => delta
 		)
-		PORT MAP(
-			clk		=> clk,
-			rst		=> rst,
-			zoom	=> zoom_i,
-			inc		=> inc_y,
-			dec		=> dec_y,
+		PORT MAP (
+			clk       => clk,
+			rst       => rst,
+			zoom      => zoom_i,
+			inc       => inc_y,
+			dec       => dec_y,
 			center	=> center_y
 		);
-END structural;
+
+END ARCHITECTURE structural;
