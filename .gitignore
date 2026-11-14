@@ -3,3 +3,4 @@ vunit_out/
 impl/
 __pycache__/
 *.pyc
+*.cf
