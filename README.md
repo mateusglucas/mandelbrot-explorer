@@ -31,6 +31,7 @@ make clean
 ## TODO
 
 - [ ] Pipeline the compute path to raise `clk_calc`
+- [ ] Reuse already computed pixels on pan/zoom (only redraw the newly exposed region)
 - [ ] Move the framebuffer to external SRAM → higher resolution
 - [ ] Add schematic
 - [ ] Add sample images
