@@ -1,5 +1,5 @@
 -- idx_to_coord: converts a pixel index to a coordinate
--- latency 2 (en=1): stage1 diff, stage2 prod=diff*ratio; coord combo from stage2
+-- latency 3 (en=1): stage1 diff, stage2 prod, stage3 shift; coord = center_3 + shift combo
 
 LIBRARY ieee;
 	USE ieee.std_logic_1164.ALL;
@@ -30,11 +30,12 @@ ARCHITECTURE behavioral OF idx_to_coord IS
 
 	SIGNAL center_1 : signed(k - 1 DOWNTO 0);
 	SIGNAL center_2 : signed(k - 1 DOWNTO 0);
+	SIGNAL center_3 : signed(k - 1 DOWNTO 0);
 
 	SIGNAL zoom_1 : unsigned(w_zoom - 1 DOWNTO 0);
 	SIGNAL zoom_2 : unsigned(w_zoom - 1 DOWNTO 0);
 
-	SIGNAL valid : std_logic_vector(1 DOWNTO 0);
+	SIGNAL valid : std_logic_vector(2 DOWNTO 0);
 
 	CONSTANT res_minus_1 : unsigned(bits_of(res - 1) - 1 DOWNTO 0) := TO_UNSIGNED(res - 1, bits_of(res - 1));
 	SIGNAL   diff        : signed(bits_of(res - 1) DOWNTO 0);       -- -(RES-1) to RES-1 -> bits_of(RES-1) + 1 bits (+1 for sign bit)
@@ -43,10 +44,9 @@ ARCHITECTURE behavioral OF idx_to_coord IS
 
 BEGIN
 
-	valid_out <= valid(1);
+	valid_out <= valid(2);
 
-	shift <= RESIZE(SHIFT_RIGHT(prod, TO_INTEGER(zoom_2) + 1), shift'LENGTH); -- shift = prod / 2^(zoom+1)
-	coord <= center_2 + shift;                                                -- coord = center + shift
+	coord <= center_3 + shift; -- coord = center + shift
 
 	PROCESS (clk) IS
 
@@ -69,9 +69,13 @@ BEGIN
 				zoom_2   <= zoom_1;
 				prod     <= diff * ratio;
 
+				-- third stage
+				center_3 <= center_2;
+				shift    <= RESIZE(SHIFT_RIGHT(prod, TO_INTEGER(zoom_2) + 1), shift'LENGTH);            -- shift = prod / 2^(zoom+1)
+
 				-- valid signals
-				valid(0) <= valid_in;
-				valid(1) <= valid(0);
+				valid(0)          <= valid_in;
+				valid(2 downto 1) <= valid(1 DOWNTO 0);
 			END IF;
 		END IF;
 

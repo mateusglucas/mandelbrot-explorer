@@ -26,7 +26,7 @@ ENTITY mandelbrot_core IS
 		w_data       : natural := 8;	-- store iter bits for palette
 		delta		: signed;          -- pan step at zoom=0
 		ratio		: signed;          -- coord units per pixel at zoom=0
-		lat_coord	: natural := 2;
+		lat_coord	: natural := 3;
 		lat_addr     : natural := 1
 	);
 	PORT (
