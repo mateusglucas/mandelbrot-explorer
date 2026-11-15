@@ -1,5 +1,5 @@
 create_clock -name clk_27 -period 37.037 [get_ports {clk_27}]
-create_generated_clock -name clk_calc -source [get_ports {clk_27}] -multiply_by 3 -divide_by 2 [get_pins {PLL_CALC/PLL_INST/CLKOUT}]
+create_generated_clock -name clk_calc -source [get_ports {clk_27}] -multiply_by 2 [get_pins {PLL_CALC/PLL_INST/CLKOUT}]
 create_generated_clock -name clk_ser -source [get_ports {clk_27}] -multiply_by 14 -divide_by 3 [get_pins {PLL_SER/PLL_INST/CLKOUT}]
 create_generated_clock -name pclk -source [get_pins {PLL_SER/PLL_INST/CLKOUT}] -divide_by 5 [get_pins {DIV_PIX/CLKOUT}]
 set_clock_groups -asynchronous -group [get_clocks {clk_calc}] -group [get_clocks {clk_ser pclk}]
