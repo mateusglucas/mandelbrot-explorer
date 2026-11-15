@@ -20,7 +20,7 @@ ARCHITECTURE sim OF tb_uart_rx IS
 	CONSTANT clk_period : time    := 1 us;
 	CONSTANT bit_cycles : natural := clk_hz / baud;
 
-	SIGNAL clk   : std_logic;
+	SIGNAL clk   : std_logic := '0';
 	SIGNAL rx    : std_logic;
 	SIGNAL data  : std_logic_vector(7 DOWNTO 0);
 	SIGNAL valid : std_logic;

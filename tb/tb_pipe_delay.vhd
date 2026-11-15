@@ -18,7 +18,7 @@ ARCHITECTURE sim OF tb_pipe_delay IS
 
 	CONSTANT clk_period : time := 10 ns;
 
-	SIGNAL clk	: std_logic;
+	SIGNAL clk	: std_logic := '0';
 	SIGNAL rst	: std_logic;
 	SIGNAL en     : std_logic;
 	SIGNAL d      : std_logic_vector(w - 1 DOWNTO 0);

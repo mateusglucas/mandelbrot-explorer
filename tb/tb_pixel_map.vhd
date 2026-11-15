@@ -32,7 +32,7 @@ ARCHITECTURE sim OF tb_pixel_map IS
 	CONSTANT ratio_c       : signed(k - 1 DOWNTO 0) := to_signed(ratio_fp, k);
 	CONSTANT one           : signed(k - 1 DOWNTO 0) := to_signed(2 ** (k - 4), k);
 
-	SIGNAL clk        : std_logic;
+	SIGNAL clk        : std_logic := '0';
 	SIGNAL rst        : std_logic;
 	SIGNAL en         : std_logic;
 	SIGNAL valid_in   : std_logic;

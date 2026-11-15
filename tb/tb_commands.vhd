@@ -17,7 +17,7 @@ ARCHITECTURE sim OF tb_commands IS
 
 	CONSTANT clk_period : time := 10 ns;
 
-	SIGNAL clk      : std_logic;
+	SIGNAL clk      : std_logic := '0';
 	SIGNAL data     : std_logic_vector(7 DOWNTO 0);
 	SIGNAL valid    : std_logic;
 	SIGNAL inc_x    : std_logic;

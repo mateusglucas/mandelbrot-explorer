@@ -31,7 +31,7 @@ ARCHITECTURE sim OF tb_mandelbrot_core IS
 	CONSTANT delta_c       : signed(k - 1 DOWNTO 0) := to_signed(delta_fp, k);
 	CONSTANT ratio_c       : signed(k - 1 DOWNTO 0) := to_signed(ratio_fp, k);
 
-	SIGNAL clk      : std_logic;
+	SIGNAL clk      : std_logic := '0';
 	SIGNAL rst      : std_logic;
 	SIGNAL inc_x    : std_logic;
 	SIGNAL dec_x    : std_logic;
@@ -39,7 +39,7 @@ ARCHITECTURE sim OF tb_mandelbrot_core IS
 	SIGNAL dec_y    : std_logic;
 	SIGNAL inc_zoom : std_logic;
 	SIGNAL dec_zoom : std_logic;
-	SIGNAL clk_rd   : std_logic;
+	SIGNAL clk_rd   : std_logic := '0';
 	SIGNAL rd_en    : std_logic;
 	SIGNAL rd_addr  : unsigned(w_addr - 1 DOWNTO 0);
 	SIGNAL rd_data  : std_logic_vector(w_data - 1 DOWNTO 0);

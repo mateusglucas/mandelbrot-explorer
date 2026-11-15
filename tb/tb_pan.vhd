@@ -24,7 +24,7 @@ ARCHITECTURE sim OF tb_pan IS
 	CONSTANT clk_period	: time                   := 10 ns;
 	CONSTANT delta_c       : signed(k - 1 DOWNTO 0) := to_signed(delta_fp, k);
 
-	SIGNAL clk    : std_logic;
+	SIGNAL clk    : std_logic := '0';
 	SIGNAL rst    : std_logic;
 	SIGNAL zoom   : unsigned(w_zoom - 1 DOWNTO 0);
 	SIGNAL inc    : std_logic;

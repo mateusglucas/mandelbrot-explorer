@@ -21,12 +21,12 @@ ARCHITECTURE sim OF tb_memory IS
 	CONSTANT w_addr		: natural := bits_of(mem_size - 1);
 	CONSTANT clk_period	: time    := 10 ns;
 
-	SIGNAL clk_wr     : std_logic;
+	SIGNAL clk_wr     : std_logic := '0';
 	SIGNAL wr_en      : std_logic;
 	SIGNAL wr_addr	: unsigned(w_addr - 1 DOWNTO 0);
 	SIGNAL wr_data	: std_logic_vector(w_data - 1 DOWNTO 0);
 
-	SIGNAL clk_rd     : std_logic;
+	SIGNAL clk_rd     : std_logic := '0';
 	SIGNAL rd_en      : std_logic;
 	SIGNAL rd_addr	: unsigned(w_addr - 1 DOWNTO 0);
 	SIGNAL rd_data	: std_logic_vector(w_data - 1 DOWNTO 0);

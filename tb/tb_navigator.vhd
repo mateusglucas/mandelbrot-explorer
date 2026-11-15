@@ -23,7 +23,7 @@ ARCHITECTURE sim OF tb_navigator IS
 	CONSTANT clk_period	: time                   := 10 ns;
 	CONSTANT delta_c       : signed(k - 1 DOWNTO 0) := to_signed(delta_fp, k);
 
-	SIGNAL clk      : std_logic;
+	SIGNAL clk      : std_logic := '0';
 	SIGNAL rst      : std_logic;
 	SIGNAL inc_x    : std_logic;
 	SIGNAL dec_x    : std_logic;

@@ -15,6 +15,7 @@ file_list:
 
 # IPs Gowin (oser10, elvds, PLL…): component black-box — não forçar ENTITY
 file_rules:
+  # IPs Gowin (oser10, elvds, PLL…): component black-box — não forçar ENTITY
   - src/board/pll.vhd:
       rule:
         instantiation_034:
@@ -26,6 +27,20 @@ file_rules:
   - src/video/hdmi_tx.vhd:
       rule:
         instantiation_034:
+          disable: true
+  # FB BRAM power-up content
+  - src/compute/memory.vhd:
+      rule:
+        signal_007:
+          disable: true
+  # TBs: defaults OK (clk := '0', stim)
+  - tb/**/*.vhd:
+      rule:
+        signal_007:
+          disable: true
+        variable_007:
+          disable: true
+        port_012:
           disable: true
 
 rule:

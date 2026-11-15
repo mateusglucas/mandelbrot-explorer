@@ -27,7 +27,7 @@ ARCHITECTURE behavioral OF memory IS
 
 	TYPE memory_type IS ARRAY(0 TO MEM_SIZE - 1) OF std_logic_vector(W_DATA - 1 DOWNTO 0);
 
-	SIGNAL mem : memory_type;
+	SIGNAL mem : memory_type := (OTHERS => (OTHERS => '0'));
 
 BEGIN
 

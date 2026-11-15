@@ -25,7 +25,7 @@ ARCHITECTURE sim OF tb_scheduler IS
 	CONSTANT n_pix         : natural := res_h * res_v;
 	CONSTANT clk_period	: time    := 10 ns;
 
-	SIGNAL clk   : std_logic;
+	SIGNAL clk   : std_logic := '0';
 	SIGNAL rst   : std_logic;
 	SIGNAL en    : std_logic;
 	SIGNAL row   : unsigned(w_row - 1 DOWNTO 0);

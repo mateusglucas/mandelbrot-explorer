@@ -20,7 +20,7 @@ ARCHITECTURE sim OF tb_counter IS
 	CONSTANT w_cnt         : natural := bits_of(max);
 	CONSTANT clk_period	: time    := 10 ns;
 
-	SIGNAL clk   : std_logic;
+	SIGNAL clk   : std_logic := '0';
 	SIGNAL rst   : std_logic;
 	SIGNAL inc   : std_logic;
 	SIGNAL dec_s : std_logic;

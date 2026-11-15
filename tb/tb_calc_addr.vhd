@@ -24,7 +24,7 @@ ARCHITECTURE sim OF tb_calc_addr IS
 	CONSTANT w_addr		: natural := bits_of(res_h * res_v - 1);
 	CONSTANT clk_period	: time    := 10 ns;
 
-	SIGNAL clk       : std_logic;
+	SIGNAL clk       : std_logic := '0';
 	SIGNAL rst       : std_logic;
 	SIGNAL en        : std_logic;
 	SIGNAL valid_in  : std_logic;

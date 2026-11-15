@@ -25,7 +25,7 @@ ARCHITECTURE sim OF tb_iterator IS
 	CONSTANT clk_period	: time    := 10 ns;
 	CONSTANT f             : natural := k - i;  -- fractional bits
 
-	SIGNAL clk         : std_logic;
+	SIGNAL clk         : std_logic := '0';
 	SIGNAL rst         : std_logic;
 	SIGNAL load		: std_logic;
 	SIGNAL x_c         : signed(k - 1 DOWNTO 0);
