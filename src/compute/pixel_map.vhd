@@ -13,7 +13,7 @@ ENTITY pixel_map IS
 		res_v		: natural := 240;
 		w_zoom       : natural := 5;
 		ratio		: signed;
-		lat_coord	: natural := 1; -- latency of idx_to_coord
+		lat_coord	: natural := 2; -- latency of idx_to_coord
 		lat_addr     : natural := 1  -- latency of calc_addr
 	);
 	PORT (
