@@ -34,3 +34,5 @@ make clean
 - [ ] Move the framebuffer to external SRAM → higher resolution
 - [ ] Add schematic
 - [ ] Add sample images
+- [ ] Load palette from an external file
+- [ ] Parameterize video timing and FB→screen scale
