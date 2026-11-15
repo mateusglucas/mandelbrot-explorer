@@ -1,6 +1,6 @@
 -- VUnit testbench for idx_to_coord:
 --   coord = center + (2*idx - (RES-1)) * RATIO / 2^(zoom+1)
---   valid_out tracks valid_in when en=1 (pipeline propagate)
+--   latency 2: valid_out / coord settle after 2 en cycles
 
 LIBRARY ieee;
 	USE ieee.std_logic_1164.ALL;
@@ -24,6 +24,7 @@ ARCHITECTURE sim OF tb_idx_to_coord IS
 
 	CONSTANT one           : signed(k - 1 DOWNTO 0) := to_signed(2 ** (k - 4), k);
 	CONSTANT w_idx         : natural                := bits_of(res - 1);
+	CONSTANT lat           : natural                := 2; -- must match idx_to_coord pipeline
 	CONSTANT clk_period	: time                   := 10 ns;
 	CONSTANT ratio_c       : signed(k - 1 DOWNTO 0) := to_signed(ratio_fp, k);
 
@@ -93,8 +94,14 @@ ARCHITECTURE sim OF tb_idx_to_coord IS
 		zoom_s		<= to_unsigned(z, W_ZOOM);
 		valid_in_s	<= vin;
 		en_s          <= '1';
-		WAIT UNTIL rising_edge(clk_s);
-		en_s          <= '0';
+
+		FOR i IN 1 TO LAT LOOP
+
+			WAIT UNTIL rising_edge(clk_s);
+
+		END LOOP;
+
+		en_s <= '0';
 		WAIT FOR 1 ns;
 
 	END PROCEDURE apply;

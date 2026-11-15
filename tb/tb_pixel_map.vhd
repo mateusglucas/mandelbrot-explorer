@@ -17,7 +17,7 @@ ENTITY tb_pixel_map IS
 		res_v         : natural := 4;
 		w_zoom		: natural := 3;
 		ratio_fp      : integer := 4096;
-		lat_coord     : natural := 1;
+		lat_coord     : natural := 2;
 		lat_addr      : natural := 1
 	);
 END ENTITY tb_pixel_map;

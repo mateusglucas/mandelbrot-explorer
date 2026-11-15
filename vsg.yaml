@@ -13,7 +13,6 @@ file_list:
   - src/**/*.vhd
   - tb/**/*.vhd
 
-# IPs Gowin (oser10, elvds, PLL…): component black-box — não forçar ENTITY
 file_rules:
   # IPs Gowin (oser10, elvds, PLL…): component black-box — não forçar ENTITY
   - src/board/pll.vhd:
