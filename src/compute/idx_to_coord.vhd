@@ -35,7 +35,7 @@ ARCHITECTURE behavioral OF idx_to_coord IS
 	SIGNAL zoom_1 : unsigned(w_zoom - 1 DOWNTO 0);
 	SIGNAL zoom_2 : unsigned(w_zoom - 1 DOWNTO 0);
 
-	SIGNAL valid : std_logic_vector(2 DOWNTO 0);
+	SIGNAL valid : std_logic_vector(1 TO 3);
 
 	CONSTANT res_minus_1 : unsigned(bits_of(res - 1) - 1 DOWNTO 0) := TO_UNSIGNED(res - 1, bits_of(res - 1));
 	SIGNAL   diff        : signed(bits_of(res - 1) DOWNTO 0);       -- -(RES-1) to RES-1 -> bits_of(RES-1) + 1 bits (+1 for sign bit)
@@ -44,7 +44,7 @@ ARCHITECTURE behavioral OF idx_to_coord IS
 
 BEGIN
 
-	valid_out <= valid(2);
+	valid_out <= valid(3);
 
 	coord <= center_3 + shift; -- coord = center + shift
 
@@ -61,21 +61,20 @@ BEGIN
 				-- first stage
 				center_1 <= center;
 				zoom_1   <= zoom;
+				valid(1) <= valid_in;
 				two_idx  := SIGNED(SHIFT_LEFT(RESIZE(idx, two_idx'LENGTH), 1));                         -- 2*idx
 				diff     <= RESIZE(two_idx - SIGNED(RESIZE(res_minus_1, two_idx'LENGTH)), diff'LENGTH); -- diff = 2*idx - (RES-1)
 
 				-- second stage
 				center_2 <= center_1;
 				zoom_2   <= zoom_1;
+				valid(2) <= valid(1);
 				prod     <= diff * ratio;
 
 				-- third stage
 				center_3 <= center_2;
+				valid(3) <= valid(2);
 				shift    <= RESIZE(SHIFT_RIGHT(prod, TO_INTEGER(zoom_2) + 1), shift'LENGTH);            -- shift = prod / 2^(zoom+1)
-
-				-- valid signals
-				valid(0)          <= valid_in;
-				valid(2 downto 1) <= valid(1 DOWNTO 0);
 			END IF;
 		END IF;
 

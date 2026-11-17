@@ -31,61 +31,81 @@ END ENTITY iterator;
 
 ARCHITECTURE behavioral OF iterator IS
 
-	SIGNAL x_c_r     : signed(k - 1 DOWNTO 0);
-	SIGNAL y_c_r     : signed(k - 1 DOWNTO 0);
-	SIGNAL iter_r	: unsigned(bits_of(max_iter) - 1 DOWNTO 0);
-	SIGNAL addr_r	: unsigned(w_addr - 1 DOWNTO 0);
-	SIGNAL valid     : std_logic;
+	-- first stage
+	SIGNAL x_c_1     : signed(k - 1 DOWNTO 0);
+	SIGNAL y_c_1     : signed(k - 1 DOWNTO 0);
+	SIGNAL addr_1    : unsigned(w_addr - 1 DOWNTO 0);
+	SIGNAL iter_1    : unsigned(bits_of(max_iter) - 1 DOWNTO 0);
+	SIGNAL x         : signed(k - 1 DOWNTO 0);
+	SIGNAL y         : signed(k - 1 DOWNTO 0);
 
+	-- second stage
+	SIGNAL x_c_2     : signed(k - 1 DOWNTO 0);
+	SIGNAL y_c_2     : signed(k - 1 DOWNTO 0);
+	SIGNAL addr_2    : unsigned(w_addr - 1 DOWNTO 0);
+	SIGNAL iter_2    : unsigned(bits_of(max_iter) - 1 DOWNTO 0);
 	SIGNAL xx    : signed(2 * k - 1 DOWNTO 0);
 	SIGNAL xy    : signed(2 * k - 1 DOWNTO 0);
 	SIGNAL yy    : signed(2 * k - 1 DOWNTO 0);
-	SIGNAL norm2 : signed(2 * k - 1 DOWNTO 0); -- worst case is x_c=2-epsilon, y_c=0 -> x_new=2^2+2-epsilon=6-epsilon, y_new=0
-	-- -> norm2=(6-epsilon)^2+0^2=36-epsilon, which fits in 2*I=8 bits (with sign bit)
-	SIGNAL x         : signed(k - 1 DOWNTO 0);
-	SIGNAL y         : signed(k - 1 DOWNTO 0);
+	SIGNAL norm2 : signed(2 * k - 1 DOWNTO 0); -- worst case is x_c=2-epsilon, y_c=0 -> x_new=2^2+2-epsilon=6-epsilon, y_new=0			
+									           -- -> norm2=(6-epsilon)^2+0^2=36-epsilon, which fits in 2*i=8 bits (with sign bit)
 	SIGNAL done_aux1 :	std_logic;
 	SIGNAL done_aux2 :	std_logic;
 	SIGNAL done_aux  :	std_logic;
 
+	SIGNAL valid : std_logic_vector(1 TO 2);
+
 BEGIN
 
-	xx    <= x * x;
-	yy    <= y * y;
-	xy    <= x * y;
+	-- second stage combinatorial logic
 	norm2 <= xx + yy;
+	done_aux1 <= '0' WHEN iter_2 < max_iter ELSE '1';
+	done_aux2 <= '0' WHEN SHIFT_RIGHT(norm2, 2 * (k - i)) < 4 ELSE '1';
+	done_aux  <= (done_aux1 OR done_aux2) AND valid(2);
 
-	iter     <= iter_r;
-	addr_out <= addr_r;
-
-	done_aux1 <= '0' WHEN iter_r < max_iter ELSE
-	             '1';
-	done_aux2 <= '0' WHEN SHIFT_RIGHT(norm2, 2 * (k - i)) < 4 ELSE
-	             '1';
-	done_aux  <= (done_aux1 OR done_aux2) AND valid;
+	-- output logic
 	done      <= done_aux;
-	empty     <= (NOT valid) OR done_aux;
+	iter     <= iter_2;
+	addr_out <= addr_2;
+	empty     <= (NOT valid(2)) OR done_aux;
 
 	PROCESS (clk) IS
 	BEGIN
 
 		IF (RISING_EDGE(clk)) THEN
 			IF (rst = '1') THEN
-				valid <= '0';
-			ELSIF (load = '1') THEN
-				x_c_r  <= x_c;
-				y_c_r  <= y_c;
-				x      <= x_c;
-				y      <= y_c;
-				addr_r <= addr;
-				iter_r <= (OTHERS => '0');
-				valid  <= '1';
-			ELSIF (done_aux = '0' AND valid = '1') THEN
-				x      <= (xx(2 * k - i - 1 DOWNTO k - i) - yy(2 * k - i - 1 DOWNTO k - i)) + x_c_r;
-				y      <= xy(2 * k - i - 2 DOWNTO k - i - 1) + y_c_r;
-				iter_r <= iter_r + 1;
+				valid <= (OTHERS => '0');
 			ELSE
-				valid <= '0';
+				-- first stage
+				IF (load = '1') THEN
+					x      <= x_c;
+					y      <= y_c;
+					x_c_1  <= x_c;
+					y_c_1  <= y_c;
+					addr_1 <= addr;
+					iter_1 <= (OTHERS => '0');
+					valid(1)  <= '1';
+				ELSIF (done_aux = '0' AND valid(2) = '1') THEN
+					x      <= (xx(2 * k - i - 1 DOWNTO k - i) - yy(2 * k - i - 1 DOWNTO k - i)) + x_c_2;
+					y      <= xy(2 * k - i - 2 DOWNTO k - i - 1) + y_c_2;
+					x_c_1  <= x_c_2;
+					y_c_1  <= y_c_2;
+					addr_1 <= addr_2;
+					iter_1 <= iter_2 + 1;
+					valid(1) <= valid(2);
+				ELSE
+					valid(1) <= '0';
+				END IF;
+
+				-- second stage
+				xx <= x*x;
+				yy <= y*y;
+				xy <= x*y;
+				x_c_2 <= x_c_1;
+				y_c_2 <= y_c_1;
+				addr_2 <= addr_1;
+				iter_2 <= iter_1;
+				valid(2) <= valid(1);
 			END IF;
 		END IF;
 
