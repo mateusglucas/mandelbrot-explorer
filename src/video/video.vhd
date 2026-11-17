@@ -15,9 +15,9 @@ LIBRARY ieee;
 
 ENTITY video IS
 	GENERIC (
-		res_h     : natural := 320;
-		res_v     : natural := 240;
-		w_data    : natural := 8;
+		res_h  : natural := 320;
+		res_v  : natural := 240;
+		w_data : natural := 8;
 		-- VGA timing (defaults = 640x480@60); override in TB for a tiny frame
 		h_visible : natural := 640;
 		h_fporch  : natural := 16;

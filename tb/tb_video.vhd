@@ -16,14 +16,14 @@ ENTITY tb_video IS
 		res_v      : natural := 3;
 		w_data     : natural := 8;
 		-- 8x6 active (covers 4x3 FB at 2x) + minimal blanking
-		h_visible  : natural := 8;
-		h_fporch   : natural := 1;
-		h_sync_w   : natural := 2;
-		h_bporch   : natural := 1;
-		v_visible  : natural := 6;
-		v_fporch   : natural := 1;
-		v_sync_w   : natural := 1;
-		v_bporch   : natural := 1
+		h_visible : natural := 8;
+		h_fporch  : natural := 1;
+		h_sync_w  : natural := 2;
+		h_bporch  : natural := 1;
+		v_visible : natural := 6;
+		v_fporch  : natural := 1;
+		v_sync_w  : natural := 1;
+		v_bporch  : natural := 1
 	);
 END ENTITY tb_video;
 
