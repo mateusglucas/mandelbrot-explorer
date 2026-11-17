@@ -106,8 +106,8 @@ ARCHITECTURE sim OF tb_iterator IS
 	END PROCEDURE start_point;
 
 	-- Sample done after combo settles (avoids delta-cycle glitches on valid↑).
+	-- 3-stage pipe: ~3 clocks per Mandelbrot iteration when one point is in flight
 
-	-- 2-stage pipe: ~2 clocks per Mandelbrot iteration when one point is in flight
 	PROCEDURE wait_done (
 		SIGNAL done_s	: IN std_logic;
 		SIGNAL clk_s     : IN std_logic
@@ -120,7 +120,7 @@ ARCHITECTURE sim OF tb_iterator IS
 			RETURN;
 		END IF;
 
-		FOR i IN 0 TO 2 * MAX_ITER + 8 LOOP
+		FOR i IN 0 TO 3 * MAX_ITER + 16 LOOP
 
 			tick(clk_s);
 			WAIT FOR 1 ns;
@@ -264,17 +264,20 @@ BEGIN
 				WAIT FOR 1 ns;
 				check_equal(empty, '1', "empty when idle");
 
-				-- after load, point sits in stage1 only → empty stays 1 (2nd slot open)
+				-- empty stays 1 until an unfinished point reaches stage 3
 				start_point(to_fp(0.5), to_fp(0.0), 1, x_c, y_c, addr, load, clk);
 				WAIT FOR 1 ns;
 				check_equal(empty, '1', "empty while only stage1 filled");
 				check_equal(done, '0', "not done yet after load for c=0.5");
 
-				-- once stage2 holds an unfinished point, empty drops
 				tick(clk);
 				WAIT FOR 1 ns;
-				check_equal(empty, '0', "busy once stage2 has unfinished work");
-				check_equal(done, '0', "still iterating c=0.5 in stage2");
+				check_equal(empty, '1', "empty while point in stage2 products");
+
+				tick(clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '0', "busy once stage3 has unfinished work");
+				check_equal(done, '0', "still iterating c=0.5 in stage3");
 
 				wait_done(done, clk);
 				check_equal(empty, '1', "empty when done (ready for next)");
@@ -283,8 +286,9 @@ BEGIN
 				WAIT FOR 1 ns;
 				check_equal(done, '0', "done cleared");
 				check_equal(empty, '1', "empty stays high when idle again");
-			ELSIF run("two_in_flight") THEN
-				-- A needs several iters; load B while empty still high (stage1 only)
+			ELSIF run("three_in_flight") THEN
+				-- fill all 3 stages while empty stays high, then run to completion
+				-- A slow, B mid, C escapes immediately once in stage3
 				x_c  <= to_fp(0.5);
 				y_c  <= to_fp(0.0);
 				addr <= to_unsigned(10, w_addr);
@@ -292,26 +296,40 @@ BEGIN
 				tick(clk);
 				load <= '0';
 				WAIT FOR 1 ns;
-				check_equal(empty, '1', "second slot open after first load");
+				check_equal(empty, '1', "slot open after 1st load");
 
-				x_c  <= to_fp(3.0);
+				x_c  <= to_fp(0.75);
 				y_c  <= to_fp(0.0);
 				addr <= to_unsigned(20, w_addr);
 				load <= '1';
 				tick(clk);
 				load <= '0';
 				WAIT FOR 1 ns;
-				check_equal(empty, '0', "both in flight (A unfinished in stage2)");
-				check_equal(done, '0', "A not escaped on first stage2 eval");
+				check_equal(empty, '1', "slot open after 2nd load");
 
-				-- B escapes as soon as its products hit stage2 → finishes before A
+				x_c  <= to_fp(3.0);
+				y_c  <= to_fp(0.0);
+				addr <= to_unsigned(30, w_addr);
+				load <= '1';
+				tick(clk);
+				load <= '0';
+				WAIT FOR 1 ns;
+				check_equal(empty, '0', "pipe full (A unfinished in stage3)");
+				check_equal(done, '0', "A not escaped on first stage3 eval");
+
+				-- C reaches stage3 next among the three and escapes at iter 0
 				wait_done(done, clk);
-				check_equal(addr_out, 20, "B (c=3) finishes first");
-				check_equal(iter, 0, "B iter 0");
+				check_equal(addr_out, 30, "C (c=3) finishes first");
+				check_equal(iter, 0, "C iter 0");
 
 				tick(clk);
 				wait_done(done, clk);
-				check_equal(addr_out, 10, "A (c=0.5) finishes second");
+				check_equal(addr_out, 20, "B (c=0.75) finishes second");
+				check_equal(iter, 2, "B iter 2");
+
+				tick(clk);
+				wait_done(done, clk);
+				check_equal(addr_out, 10, "A (c=0.5) finishes third");
 				check_equal(iter, 4, "A iter 4");
 			END IF;
 

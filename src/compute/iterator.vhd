@@ -32,42 +32,52 @@ END ENTITY iterator;
 ARCHITECTURE behavioral OF iterator IS
 
 	-- first stage
-	SIGNAL x_c_1     : signed(k - 1 DOWNTO 0);
-	SIGNAL y_c_1     : signed(k - 1 DOWNTO 0);
-	SIGNAL addr_1    : unsigned(w_addr - 1 DOWNTO 0);
-	SIGNAL iter_1    : unsigned(bits_of(max_iter) - 1 DOWNTO 0);
-	SIGNAL x         : signed(k - 1 DOWNTO 0);
-	SIGNAL y         : signed(k - 1 DOWNTO 0);
+	SIGNAL x : signed(k - 1 DOWNTO 0);
+	SIGNAL y : signed(k - 1 DOWNTO 0);
 
 	-- second stage
-	SIGNAL x_c_2     : signed(k - 1 DOWNTO 0);
-	SIGNAL y_c_2     : signed(k - 1 DOWNTO 0);
-	SIGNAL addr_2    : unsigned(w_addr - 1 DOWNTO 0);
-	SIGNAL iter_2    : unsigned(bits_of(max_iter) - 1 DOWNTO 0);
-	SIGNAL xx    : signed(2 * k - 1 DOWNTO 0);
-	SIGNAL xy    : signed(2 * k - 1 DOWNTO 0);
-	SIGNAL yy    : signed(2 * k - 1 DOWNTO 0);
-	SIGNAL norm2 : signed(2 * k - 1 DOWNTO 0); -- worst case is x_c=2-epsilon, y_c=0 -> x_new=2^2+2-epsilon=6-epsilon, y_new=0			
-									           -- -> norm2=(6-epsilon)^2+0^2=36-epsilon, which fits in 2*i=8 bits (with sign bit)
+	SIGNAL xx_2 : signed(2 * k - 1 DOWNTO 0);
+	SIGNAL xy_2 : signed(2 * k - 1 DOWNTO 0);
+	SIGNAL yy_2 : signed(2 * k - 1 DOWNTO 0);
+
+	-- third stage
+	SIGNAL xx_3  : signed(2 * k - 1 DOWNTO 0);
+	SIGNAL xy_3  : signed(2 * k - 1 DOWNTO 0);
+	SIGNAL yy_3  : signed(2 * k - 1 DOWNTO 0);
+	SIGNAL norm2 : signed(2 * k - 1 DOWNTO 0); -- worst case is x_c=2-epsilon, y_c=0 -> x_new=2^2+2-epsilon=6-epsilon, y_new=0
+	-- -> norm2=(6-epsilon)^2+0^2=36-epsilon, which fits in 2*i=8 bits (with sign bit)
+
+	-- output logic
 	SIGNAL done_aux1 :	std_logic;
 	SIGNAL done_aux2 :	std_logic;
 	SIGNAL done_aux  :	std_logic;
 
-	SIGNAL valid : std_logic_vector(1 TO 2);
+	-- arrays for the stages ( suffixed: ports already use x_c/y_c/addr/iter )
+
+	TYPE coord_array IS ARRAY(1 TO 3) OF signed(k - 1 DOWNTO 0);
+
+	TYPE addr_array IS ARRAY(1 TO 3) OF unsigned(w_addr - 1 DOWNTO 0);
+
+	TYPE iter_array IS ARRAY(1 TO 3) OF unsigned(bits_of(max_iter) - 1 DOWNTO 0);
+
+	SIGNAL x_c_a  : coord_array;
+	SIGNAL y_c_a  : coord_array;
+	SIGNAL addr_a : addr_array;
+	SIGNAL iter_a : iter_array;
+	SIGNAL valid  : std_logic_vector(1 TO 3);
 
 BEGIN
 
-	-- second stage combinatorial logic
-	norm2 <= xx + yy;
-	done_aux1 <= '0' WHEN iter_2 < max_iter ELSE '1';
-	done_aux2 <= '0' WHEN SHIFT_RIGHT(norm2, 2 * (k - i)) < 4 ELSE '1';
-	done_aux  <= (done_aux1 OR done_aux2) AND valid(2);
+	done_aux1 <= '0' WHEN iter_a(iter_a'HIGH) < max_iter ELSE
+	             '1';
+	done_aux2 <= '0' WHEN SHIFT_RIGHT(norm2, 2 * (k - i)) < 4 ELSE
+	             '1';
+	done_aux  <= (done_aux1 OR done_aux2) AND valid(valid'HIGH);
 
-	-- output logic
-	done      <= done_aux;
-	iter     <= iter_2;
-	addr_out <= addr_2;
-	empty     <= (NOT valid(2)) OR done_aux;
+	done     <= done_aux;
+	iter     <= iter_a(iter_a'HIGH);
+	addr_out <= addr_a(addr_a'HIGH);
+	empty    <= (NOT valid(valid'HIGH)) OR done_aux;
 
 	PROCESS (clk) IS
 	BEGIN
@@ -78,34 +88,42 @@ BEGIN
 			ELSE
 				-- first stage
 				IF (load = '1') THEN
-					x      <= x_c;
-					y      <= y_c;
-					x_c_1  <= x_c;
-					y_c_1  <= y_c;
-					addr_1 <= addr;
-					iter_1 <= (OTHERS => '0');
+					x         <= x_c;
+					y         <= y_c;
+					x_c_a(1)  <= x_c;
+					y_c_a(1)  <= y_c;
+					addr_a(1) <= addr;
+					iter_a(1) <= (OTHERS => '0');
 					valid(1)  <= '1';
-				ELSIF (done_aux = '0' AND valid(2) = '1') THEN
-					x      <= (xx(2 * k - i - 1 DOWNTO k - i) - yy(2 * k - i - 1 DOWNTO k - i)) + x_c_2;
-					y      <= xy(2 * k - i - 2 DOWNTO k - i - 1) + y_c_2;
-					x_c_1  <= x_c_2;
-					y_c_1  <= y_c_2;
-					addr_1 <= addr_2;
-					iter_1 <= iter_2 + 1;
-					valid(1) <= valid(2);
+				ELSIF (done_aux = '0' AND valid(valid'HIGH) = '1') THEN
+					x         <= (xx_3(2 * k - i - 1 DOWNTO k - i) - yy_3(2 * k - i - 1 DOWNTO k - i)) + x_c_a(x_c_a'HIGH);
+					y         <= xy_3(2 * k - i - 2 DOWNTO k - i - 1) + y_c_a(y_c_a'HIGH);
+					x_c_a(1)  <= x_c_a(x_c_a'HIGH);
+					y_c_a(1)  <= y_c_a(y_c_a'HIGH);
+					addr_a(1) <= addr_a(addr_a'HIGH);
+					iter_a(1) <= iter_a(iter_a'HIGH) + 1;
+					valid(1)  <= valid(valid'HIGH);
 				ELSE
 					valid(1) <= '0';
 				END IF;
 
 				-- second stage
-				xx <= x*x;
-				yy <= y*y;
-				xy <= x*y;
-				x_c_2 <= x_c_1;
-				y_c_2 <= y_c_1;
-				addr_2 <= addr_1;
-				iter_2 <= iter_1;
-				valid(2) <= valid(1);
+				xx_2 <= x * x;
+				yy_2 <= y * y;
+				xy_2 <= x * y;
+
+				-- third stage
+				xx_3  <= xx_2;
+				yy_3  <= yy_2;
+				xy_3  <= xy_2;
+				norm2 <= xx_2 + yy_2;
+
+				-- shift the arrays
+				x_c_a(2 TO x_c_a'HIGH)   <= x_c_a(1 TO x_c_a'HIGH - 1);
+				y_c_a(2 TO y_c_a'HIGH)   <= y_c_a(1 TO y_c_a'HIGH - 1);
+				addr_a(2 TO addr_a'HIGH) <= addr_a(1 TO addr_a'HIGH - 1);
+				iter_a(2 TO iter_a'HIGH) <= iter_a(1 TO iter_a'HIGH - 1);
+				valid(2 TO valid'HIGH)   <= valid(1 TO valid'HIGH - 1);
 			END IF;
 		END IF;
 

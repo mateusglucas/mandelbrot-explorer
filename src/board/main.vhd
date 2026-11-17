@@ -1,6 +1,6 @@
 -- Board top: Tang Nano 20K (GW2AR-18C)
 --
--- clk_calc (74.25 MHz): UART → commands → mandelbrot_core write path
+-- clk_calc (81 MHz): UART → commands → mandelbrot_core write path
 -- pclk (25.2 MHz): video readout → palette → HDMI 640x480@60
 -- Frame buffer is 320x240 BSRAM; video repeats pixels/lines 2x
 
@@ -23,12 +23,12 @@ END ENTITY main;
 
 ARCHITECTURE structural OF main IS
 
-	-- clk_calc = 27*(FBDIV+1)/(IDIV+1) = 74.25 MHz (VCO = 74.25*16 = 1188 MHz)
-	-- Fmax ~87 MHz after iterator 2-stage pipe; 74.25 leaves ~15% margin.
+	-- clk_calc = 27*(FBDIV+1)/(IDIV+1) = 81 MHz (VCO = 81*8 = 648 MHz; odiv 16 would exceed 1250)
+	-- Fmax ~91 MHz after iterator 3-stage pipe.
 	CONSTANT calc_idiv   : integer := 3;
-	CONSTANT calc_fbdiv  : integer := 10;
-	CONSTANT calc_odiv   : integer := 16;
-	CONSTANT clk_calc_hz : natural := 74_250_000;
+	CONSTANT calc_fbdiv  : integer := 11;
+	CONSTANT calc_odiv   : integer := 8;
+	CONSTANT clk_calc_hz : natural := 81_000_000;
 
 	CONSTANT k        : natural := 36;
 	CONSTANT res_h    : natural := 320;
