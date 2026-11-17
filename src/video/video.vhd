@@ -17,10 +17,20 @@ ENTITY video IS
 	GENERIC (
 		res_h     : natural := 320;
 		res_v     : natural := 240;
-		w_data	: natural := 8
+		w_data    : natural := 8;
+		-- VGA timing (defaults = 640x480@60); override in TB for a tiny frame
+		h_visible : natural := 640;
+		h_fporch  : natural := 16;
+		h_sync_w  : natural := 96;
+		h_bporch  : natural := 48;
+		v_visible : natural := 480;
+		v_fporch  : natural := 10;
+		v_sync_w  : natural := 2;
+		v_bporch  : natural := 33
 	);
 	PORT (
 		clk : IN    std_logic;
+		rst : IN    std_logic;
 		-- memory read
 		rd_en   : OUT   std_logic;
 		rd_addr : OUT   unsigned(bits_of(res_h * res_v - 1) - 1 DOWNTO 0);
@@ -53,13 +63,24 @@ ARCHITECTURE structural OF video IS
 BEGIN
 
 	SYNC : ENTITY work.vga_sync
+		GENERIC MAP (
+			h_visible => h_visible,
+			h_fporch  => h_fporch,
+			h_sync_w  => h_sync_w,
+			h_bporch  => h_bporch,
+			v_visible => v_visible,
+			v_fporch  => v_fporch,
+			v_sync_w  => v_sync_w,
+			v_bporch  => v_bporch
+		)
 		PORT MAP (
-			clk			=> clk,
-			v_sync         => vs0,
-			h_sync         => hs0,
-			active_area	=> de0,
-			x              => px,
-			y              => py
+			clk         => clk,
+			rst         => rst,
+			v_sync      => vs0,
+			h_sync      => hs0,
+			active_area => de0,
+			x           => px,
+			y           => py
 		);
 
 	-- 2x pixel and line repeat: screen (px,py) → FB (px/2, py/2)
@@ -73,11 +94,19 @@ BEGIN
 	BEGIN
 
 		IF RISING_EDGE(clk) THEN
-			rd_en   <= '1';
-			rd_addr <= addr_comb;
-			de_d    <= de_d(1 DOWNTO 0) & de0;
-			hs_d    <= hs_d(1 DOWNTO 0) & hs0;
-			vs_d    <= vs_d(1 DOWNTO 0) & vs0;
+			IF (rst = '1') THEN
+				rd_en   <= '0';
+				rd_addr <= (OTHERS => '0');
+				de_d    <= (OTHERS => '0');
+				hs_d    <= (OTHERS => '1');
+				vs_d    <= (OTHERS => '1');
+			ELSE
+				rd_en   <= '1';
+				rd_addr <= addr_comb;
+				de_d    <= de_d(1 DOWNTO 0) & de0;
+				hs_d    <= hs_d(1 DOWNTO 0) & hs0;
+				vs_d    <= vs_d(1 DOWNTO 0) & vs0;
+			END IF;
 		END IF;
 
 	END PROCESS;

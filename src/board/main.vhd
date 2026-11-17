@@ -241,14 +241,15 @@ BEGIN
 			res_h => RES_H, res_v => RES_V, w_data => W_DATA
 		)
 		PORT MAP (
-			clk		=> pclk,
-			rd_en      => rd_en,
-			rd_addr	=> rd_addr,
-			rd_data	=> rd_data,
-			rgb		=> rgb,
-			h_sync     => h_sync,
-			v_sync     => v_sync,
-			de         => de
+			clk     => pclk,
+			rst     => rst_pix,
+			rd_en   => rd_en,
+			rd_addr => rd_addr,
+			rd_data => rd_data,
+			rgb     => rgb,
+			h_sync  => h_sync,
+			v_sync  => v_sync,
+			de      => de
 		);
 
 	HDMI : ENTITY work.hdmi_tx
