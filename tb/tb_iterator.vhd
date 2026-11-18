@@ -106,7 +106,7 @@ ARCHITECTURE sim OF tb_iterator IS
 	END PROCEDURE start_point;
 
 	-- Sample done after combo settles (avoids delta-cycle glitches on valid↑).
-	-- 3-stage pipe: ~3 clocks per Mandelbrot iteration when one point is in flight
+	-- 4-stage pipe: ~4 clocks per Mandelbrot iteration when one point is in flight
 
 	PROCEDURE wait_done (
 		SIGNAL done_s	: IN std_logic;
@@ -120,7 +120,7 @@ ARCHITECTURE sim OF tb_iterator IS
 			RETURN;
 		END IF;
 
-		FOR i IN 0 TO 3 * MAX_ITER + 16 LOOP
+		FOR i IN 0 TO 4 * MAX_ITER + 16 LOOP
 
 			tick(clk_s);
 			WAIT FOR 1 ns;
@@ -264,7 +264,7 @@ BEGIN
 				WAIT FOR 1 ns;
 				check_equal(empty, '1', "empty when idle");
 
-				-- empty stays 1 until an unfinished point reaches stage 3
+				-- empty stays 1 until an unfinished point reaches stage 4
 				start_point(to_fp(0.5), to_fp(0.0), 1, x_c, y_c, addr, load, clk);
 				WAIT FOR 1 ns;
 				check_equal(empty, '1', "empty while only stage1 filled");
@@ -276,8 +276,12 @@ BEGIN
 
 				tick(clk);
 				WAIT FOR 1 ns;
-				check_equal(empty, '0', "busy once stage3 has unfinished work");
-				check_equal(done, '0', "still iterating c=0.5 in stage3");
+				check_equal(empty, '1', "empty while point in stage3 (norm2)");
+
+				tick(clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '0', "busy once stage4 has unfinished work");
+				check_equal(done, '0', "still iterating c=0.5 in stage4");
 
 				wait_done(done, clk);
 				check_equal(empty, '1', "empty when done (ready for next)");
@@ -287,8 +291,8 @@ BEGIN
 				check_equal(done, '0', "done cleared");
 				check_equal(empty, '1', "empty stays high when idle again");
 			ELSIF run("three_in_flight") THEN
-				-- fill all 3 stages while empty stays high, then run to completion
-				-- A slow, B mid, C escapes immediately once in stage3
+				-- three pixels in a 4-stage pipe; empty drops when first reaches stage4
+				-- A slow, B mid, C escapes immediately once escape flags are ready
 				x_c  <= to_fp(0.5);
 				y_c  <= to_fp(0.0);
 				addr <= to_unsigned(10, w_addr);
@@ -314,10 +318,14 @@ BEGIN
 				tick(clk);
 				load <= '0';
 				WAIT FOR 1 ns;
-				check_equal(empty, '0', "pipe full (A unfinished in stage3)");
-				check_equal(done, '0', "A not escaped on first stage3 eval");
+				check_equal(empty, '1', "still open (A only in stage3)");
 
-				-- C reaches stage3 next among the three and escapes at iter 0
+				tick(clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '0', "pipe busy (A unfinished in stage4)");
+				check_equal(done, '0', "A not escaped on first stage4 eval");
+
+				-- C reaches stage4 and escapes at iter 0
 				wait_done(done, clk);
 				check_equal(addr_out, 30, "C (c=3) finishes first");
 				check_equal(iter, 0, "C iter 0");
