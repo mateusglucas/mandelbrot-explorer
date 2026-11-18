@@ -38,8 +38,8 @@ END ENTITY pixel_map;
 
 ARCHITECTURE structural OF pixel_map IS
 
-	-- idx_to_coord: diff + prod/2 + n_stages barrel; calc_addr: 1
-	CONSTANT lat_coord : natural := (w_zoom + zoom_bits_per_stage - 1) / zoom_bits_per_stage + 2;
+	-- idx_to_coord: diff + prod/2 + n_barrel + registered coord; calc_addr: 1
+	CONSTANT lat_coord : natural := (w_zoom + zoom_bits_per_stage - 1) / zoom_bits_per_stage + 3;
 	CONSTANT lat_addr  : natural := 1;
 	CONSTANT lat_max   : natural := maximum(lat_coord, lat_addr);
 	CONSTANT dl_coord  : natural := lat_max - lat_coord;

@@ -1,6 +1,6 @@
 -- VUnit testbench for idx_to_coord:
 --   coord = center + (2*idx - (RES-1)) * RATIO / 2^(zoom+1)
---   latency n_stages+2: valid_out / coord settle after that many en cycles
+--   latency n_stages+3: valid_out / coord settle after that many en cycles
 
 LIBRARY ieee;
 	USE ieee.std_logic_1164.ALL;
@@ -26,7 +26,7 @@ ARCHITECTURE sim OF tb_idx_to_coord IS
 	CONSTANT one        : signed(k - 1 DOWNTO 0) := to_signed(2 ** (k - 4), k);
 	CONSTANT w_idx      : natural                := bits_of(res - 1);
 	CONSTANT n_stages   : natural                := (w_zoom + zoom_bits_per_stage - 1) / zoom_bits_per_stage;
-	CONSTANT lat        : natural                := n_stages + 2; -- must match idx_to_coord pipeline
+	CONSTANT lat        : natural                := n_stages + 3; -- must match idx_to_coord pipeline
 	CONSTANT clk_period : time                   := 10 ns;
 	CONSTANT ratio_c    : signed(k - 1 DOWNTO 0) := to_signed(ratio_fp, k);
 

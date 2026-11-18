@@ -1,6 +1,6 @@
 -- idx_to_coord: converts a pixel index to a coordinate
--- latency n_stages+2 (en=1): stage1 diff, stage2 prod/2, then n_stages barrel slices;
--- n_stages = ceil(w_zoom / zoom_bits_per_stage); coord = center + shift (combo at the end)
+-- latency n_barrel_stages+3 (en=1): diff, prod/2, n_barrel barrel slices, then registered coord;
+-- n_barrel_stages = ceil(w_zoom / zoom_bits_per_stage)
 
 LIBRARY ieee;
 	USE ieee.std_logic_1164.ALL;
@@ -43,13 +43,11 @@ ARCHITECTURE behavioral OF idx_to_coord IS
 	SIGNAL center_a : center_array;
 	SIGNAL zoom_a   : zoom_array;
 	SIGNAL shift_a  : shift_array;
-	SIGNAL valid    : std_logic_vector(1 TO n_barrel_stages + 2);
+	SIGNAL valid    : std_logic_vector(1 TO n_barrel_stages + 3);
 
 BEGIN
 
 	valid_out <= valid(valid'HIGH);
-
-	coord <= center_a(center_a'HIGH) + RESIZE(shift_a(shift_a'HIGH), k); -- coord = center + shift
 
 	PROCESS (clk) IS
 
@@ -94,6 +92,9 @@ BEGIN
 
 				END LOOP;
 
+				-- last stage
+				coord             <= center_a(center_a'HIGH) + RESIZE(shift_a(shift_a'HIGH), k);           -- coord = center + shift
+				valid(valid'HIGH) <= valid(valid'HIGH - 1);
 			END IF;
 		END IF;
 

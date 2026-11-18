@@ -26,7 +26,7 @@ ARCHITECTURE sim OF tb_pixel_map IS
 	CONSTANT w_row         : natural                := bits_of(res_v - 1);
 	CONSTANT w_col         : natural                := bits_of(res_h - 1);
 	CONSTANT w_addr		: natural                := bits_of(res_h * res_v - 1);
-	CONSTANT lat_coord     : natural                := (w_zoom + zoom_bits_per_stage - 1) / zoom_bits_per_stage + 2;
+	CONSTANT lat_coord     : natural                := (w_zoom + zoom_bits_per_stage - 1) / zoom_bits_per_stage + 3;
 	CONSTANT lat_addr      : natural                := 1;
 	CONSTANT lat_max       : natural                := maximum(lat_coord, lat_addr);
 	CONSTANT clk_period	: time                   := 10 ns;
