@@ -189,6 +189,7 @@ BEGIN
 	CMD : ENTITY work.commands
 		PORT MAP (
 			clk      => clk_calc,
+			rst      => rst,
 			data     => rx_data,
 			valid    => rx_valid,
 			inc_x    => inc_x,

@@ -13,6 +13,7 @@ LIBRARY ieee;
 ENTITY commands IS
 	PORT (
 		clk      : IN    std_logic;
+		rst      : IN    std_logic;
 		data     : IN    std_logic_vector(7 DOWNTO 0);
 		valid    : IN    std_logic;
 		inc_x    : OUT   std_logic;
@@ -47,7 +48,9 @@ BEGIN
 			inc_zoom <= '0';
 			dec_zoom <= '0';
 			reset    <= '0';
-			IF (valid = '1') THEN
+			IF (rst = '1') THEN
+				state <= s_normal;
+			ELSIF (valid = '1') THEN
 				c := TO_INTEGER(UNSIGNED(data));
 
 				CASE state IS

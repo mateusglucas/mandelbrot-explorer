@@ -290,33 +290,72 @@ BEGIN
 				WAIT FOR 1 ns;
 				check_equal(done, '0', "done cleared");
 				check_equal(empty, '1', "empty stays high when idle again");
+			ELSIF run("two_in_flight_back_to_back") THEN
+				-- consecutive loads: A slow, B fast → B finishes first
+				start_point(to_fp(0.5), to_fp(0.0), 10, x_c, y_c, addr, load, clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "slot open after A");
+
+				start_point(to_fp(3.0), to_fp(0.0), 20, x_c, y_c, addr, load, clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "slot open after B (A in stage2)");
+
+				tick(clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "still open (A in stage3)");
+
+				tick(clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '0', "busy (A unfinished in stage4)");
+				check_equal(done, '0', "A not escaped on first stage4 eval");
+
+				wait_done(done, clk);
+				check_equal(addr_out, 20, "B (c=3) finishes first");
+				check_equal(iter, 0, "B iter 0");
+
+				tick(clk);
+				wait_done(done, clk);
+				check_equal(addr_out, 10, "A (c=0.5) finishes second");
+				check_equal(iter, 4, "A iter 4");
+			ELSIF run("two_in_flight_interleaved") THEN
+				-- gap of 2 clocks between loads: A advances to stage3, then B enters
+				start_point(to_fp(0.5), to_fp(0.0), 10, x_c, y_c, addr, load, clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "slot open after A");
+
+				tick(clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "gap: A in stage2");
+
+				tick(clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "gap: A in stage3");
+
+				start_point(to_fp(3.0), to_fp(0.0), 20, x_c, y_c, addr, load, clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '0', "busy as A hits stage4 while B loads");
+				check_equal(done, '0', "A not escaped on first stage4 eval");
+
+				wait_done(done, clk);
+				check_equal(addr_out, 20, "B (c=3) finishes first");
+				check_equal(iter, 0, "B iter 0");
+
+				tick(clk);
+				wait_done(done, clk);
+				check_equal(addr_out, 10, "A (c=0.5) finishes second");
+				check_equal(iter, 4, "A iter 4");
 			ELSIF run("three_in_flight") THEN
 				-- three pixels in a 4-stage pipe; empty drops when first reaches stage4
 				-- A slow, B mid, C escapes immediately once escape flags are ready
-				x_c  <= to_fp(0.5);
-				y_c  <= to_fp(0.0);
-				addr <= to_unsigned(10, w_addr);
-				load <= '1';
-				tick(clk);
-				load <= '0';
+				start_point(to_fp(0.5), to_fp(0.0), 10, x_c, y_c, addr, load, clk);
 				WAIT FOR 1 ns;
 				check_equal(empty, '1', "slot open after 1st load");
 
-				x_c  <= to_fp(0.75);
-				y_c  <= to_fp(0.0);
-				addr <= to_unsigned(20, w_addr);
-				load <= '1';
-				tick(clk);
-				load <= '0';
+				start_point(to_fp(0.75), to_fp(0.0), 20, x_c, y_c, addr, load, clk);
 				WAIT FOR 1 ns;
 				check_equal(empty, '1', "slot open after 2nd load");
 
-				x_c  <= to_fp(3.0);
-				y_c  <= to_fp(0.0);
-				addr <= to_unsigned(30, w_addr);
-				load <= '1';
-				tick(clk);
-				load <= '0';
+				start_point(to_fp(3.0), to_fp(0.0), 30, x_c, y_c, addr, load, clk);
 				WAIT FOR 1 ns;
 				check_equal(empty, '1', "still open (A only in stage3)");
 
@@ -338,6 +377,43 @@ BEGIN
 				tick(clk);
 				wait_done(done, clk);
 				check_equal(addr_out, 10, "A (c=0.5) finishes third");
+				check_equal(iter, 4, "A iter 4");
+			ELSIF run("four_in_flight") THEN
+				-- fill all 4 stages; finish order reverse of escape depth
+				start_point(to_fp(0.5), to_fp(0.0), 10, x_c, y_c, addr, load, clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "slot open after A");
+
+				start_point(to_fp(0.75), to_fp(0.0), 20, x_c, y_c, addr, load, clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "slot open after B");
+
+				start_point(to_fp(1.0), to_fp(0.0), 30, x_c, y_c, addr, load, clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '1', "slot open after C (A in stage3)");
+
+				start_point(to_fp(3.0), to_fp(0.0), 40, x_c, y_c, addr, load, clk);
+				WAIT FOR 1 ns;
+				check_equal(empty, '0', "pipe full (A unfinished in stage4)");
+				check_equal(done, '0', "A not escaped on first stage4 eval");
+
+				wait_done(done, clk);
+				check_equal(addr_out, 40, "D (c=3) finishes first");
+				check_equal(iter, 0, "D iter 0");
+
+				tick(clk);
+				wait_done(done, clk);
+				check_equal(addr_out, 30, "C (c=1) finishes second");
+				check_equal(iter, 1, "C iter 1");
+
+				tick(clk);
+				wait_done(done, clk);
+				check_equal(addr_out, 20, "B (c=0.75) finishes third");
+				check_equal(iter, 2, "B iter 2");
+
+				tick(clk);
+				wait_done(done, clk);
+				check_equal(addr_out, 10, "A (c=0.5) finishes fourth");
 				check_equal(iter, 4, "A iter 4");
 			END IF;
 

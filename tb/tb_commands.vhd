@@ -17,9 +17,10 @@ ARCHITECTURE sim OF tb_commands IS
 
 	CONSTANT clk_period : time := 10 ns;
 
-	SIGNAL clk      : std_logic := '0';
-	SIGNAL data     : std_logic_vector(7 DOWNTO 0);
-	SIGNAL valid    : std_logic;
+	SIGNAL clk      : std_logic                    := '0';
+	SIGNAL rst      : std_logic                    := '1';
+	SIGNAL data     : std_logic_vector(7 DOWNTO 0) := (OTHERS => '0');
+	SIGNAL valid    : std_logic                    := '0';
 	SIGNAL inc_x    : std_logic;
 	SIGNAL dec_x    : std_logic;
 	SIGNAL inc_y    : std_logic;
@@ -35,6 +36,7 @@ BEGIN
 	DUT : ENTITY work.commands
 		PORT MAP (
 			clk      => clk,
+			rst      => rst,
 			data     => data,
 			valid    => valid,
 			inc_x    => inc_x,
@@ -47,6 +49,18 @@ BEGIN
 		);
 
 	MAIN : PROCESS IS
+
+		PROCEDURE do_rst IS
+		BEGIN
+
+			rst   <= '1';
+			valid <= '0';
+			WAIT UNTIL RISING_EDGE(clk);
+			WAIT UNTIL RISING_EDGE(clk);
+			rst   <= '0';
+			WAIT UNTIL RISING_EDGE(clk);
+
+		END PROCEDURE do_rst;
 
 		PROCEDURE tick_byte (
 			CONSTANT b : integer
@@ -68,6 +82,8 @@ BEGIN
 		test_runner_setup(runner, runner_cfg);
 
 		WHILE test_suite LOOP
+
+			do_rst;
 
 			IF run("letters") THEN
 				tick_byte(CHARACTER'POS('d'));
@@ -109,6 +125,13 @@ BEGIN
 				tick_byte(CHARACTER'POS('['));
 				tick_byte(CHARACTER'POS('D'));
 				check_equal(dec_x, '1');
+			ELSIF run("rst_clears_esc") THEN
+				-- leave parser mid-escape, then rst must restore s_normal
+				tick_byte(CHARACTER'POS(ESC));
+				do_rst;
+				tick_byte(CHARACTER'POS('d'));
+				check_equal(inc_x, '1', "letter after rst mid-ESC");
+				check_equal(dec_x, '0');
 			END IF;
 
 		END LOOP;
