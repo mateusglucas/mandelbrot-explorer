@@ -18,4 +18,4 @@ sudo udevadm trigger
 echo
 echo "ok. faça logout/login (ou reinicie a sessão gráfica) para o grupo dialout valer."
 echo "gravação imediata (com sudo, sem esperar logout):"
-echo "  sudo $HOME/Documentos/openFPGALoader/build/openFPGALoader -b tangnano20k impl/pnr/mandelbrot_explorer.fs"
+echo "  sudo $HOME/openFPGALoader/build/openFPGALoader -b tangnano20k impl/pnr/mandelbrot_explorer.fs"

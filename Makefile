@@ -12,7 +12,7 @@
 #   make clean   — remove artefatos GHDL/Gowin locais
 
 GOWIN_HOME      ?= $(HOME)/gowin/IDE
-OPENFPGALOADER  ?= $(HOME)/Documentos/openFPGALoader/build/openFPGALoader
+OPENFPGALOADER  ?= $(HOME)/openFPGALoader/build/openFPGALoader
 BITSTREAM       ?= impl/pnr/mandelbrot_explorer.fs
 BOARD           ?= tangnano20k
 PORT            ?= /dev/ttyUSB1
