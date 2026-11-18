@@ -17,17 +17,16 @@ LIBRARY ieee;
 
 ENTITY mandelbrot_core IS
 	GENERIC (
-		k			: natural := 36;
-		i			: natural := 4;
-		res_h		: natural := 320;
-		res_v		: natural := 240;
-		max_iter     : natural := 255;
-		zoom_max     : natural := 31;
-		w_data       : natural := 8;	-- store iter bits for palette
-		delta		: signed;          -- pan step at zoom=0
-		ratio		: signed;          -- coord units per pixel at zoom=0
-		lat_coord	: natural := 3;
-		lat_addr     : natural := 1
+		k                   : natural := 36;
+		i                   : natural := 4;
+		res_h               : natural := 320;
+		res_v               : natural := 240;
+		max_iter            : natural := 255;
+		zoom_max            : natural := 31;
+		w_data              : natural := 8;	-- store iter bits for palette
+		delta               : signed;          -- pan step at zoom=0
+		ratio               : signed;          -- coord units per pixel at zoom=0
+		zoom_bits_per_stage : natural := 2     -- barrel slice width in idx_to_coord
 	);
 	PORT (
 		clk : IN    std_logic;
@@ -136,13 +135,12 @@ BEGIN
 
 	U_MAP : ENTITY work.pixel_map
 		GENERIC MAP (
-			k			=> k,
-			res_h		=> res_h,
-			res_v		=> res_v,
-			w_zoom       => W_ZOOM,
-			ratio		=> ratio,
-			lat_coord	=> lat_coord,
-			lat_addr     => lat_addr
+			k                   => k,
+			res_h               => res_h,
+			res_v               => res_v,
+			w_zoom              => W_ZOOM,
+			zoom_bits_per_stage => zoom_bits_per_stage,
+			ratio               => ratio
 		)
 		PORT MAP (
 			clk           => clk,

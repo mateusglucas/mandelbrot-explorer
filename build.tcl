@@ -31,6 +31,8 @@ set_option -top_module main
 set_option -vhdl_std vhd2008
 set_option -output_base_name mandelbrot_explorer
 set_option -timing_driven 1
+set_option -place_option 2
+set_option -route_option 1
 set_option -print_all_synthesis_warning 1
 
 run all

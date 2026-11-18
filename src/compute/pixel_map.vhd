@@ -8,13 +8,12 @@ LIBRARY ieee;
 
 ENTITY pixel_map IS
 	GENERIC (
-		k			: natural := 36;
-		res_h		: natural := 320;
-		res_v		: natural := 240;
-		w_zoom       : natural := 5;
-		ratio		: signed;
-		lat_coord	: natural := 3; -- latency of idx_to_coord
-		lat_addr     : natural := 1  -- latency of calc_addr
+		k                   : natural := 36;
+		res_h               : natural := 320;
+		res_v               : natural := 240;
+		w_zoom              : natural := 5;
+		zoom_bits_per_stage : natural := 2; -- max zoom bits per barrel stage
+		ratio               : signed
 	);
 	PORT (
 		clk      : IN    std_logic;
@@ -39,10 +38,13 @@ END ENTITY pixel_map;
 
 ARCHITECTURE structural OF pixel_map IS
 
-	CONSTANT lat_max  : natural := maximum(lat_coord, lat_addr);
-	CONSTANT dl_coord : natural := lat_max - lat_coord;
-	CONSTANT dl_addr  : natural := lat_max - lat_addr;
-	CONSTANT w_addr   : natural := bits_of(res_h * res_v - 1);
+	-- idx_to_coord: diff + prod/2 + n_stages barrel; calc_addr: 1
+	CONSTANT lat_coord : natural := (w_zoom + zoom_bits_per_stage - 1) / zoom_bits_per_stage + 2;
+	CONSTANT lat_addr  : natural := 1;
+	CONSTANT lat_max   : natural := maximum(lat_coord, lat_addr);
+	CONSTANT dl_coord  : natural := lat_max - lat_coord;
+	CONSTANT dl_addr   : natural := lat_max - lat_addr;
+	CONSTANT w_addr    : natural := bits_of(res_h * res_v - 1);
 
 	SIGNAL x_raw    : signed(k - 1 DOWNTO 0);
 	SIGNAL y_raw    : signed(k - 1 DOWNTO 0);
@@ -62,10 +64,11 @@ BEGIN
 
 	U_X : ENTITY work.idx_to_coord
 		GENERIC MAP (
-			k         => k,
-			res       => res_h,
-			w_zoom	=> w_zoom,
-			ratio     => ratio
+			k                   => k,
+			res                 => res_h,
+			w_zoom              => w_zoom,
+			zoom_bits_per_stage => zoom_bits_per_stage,
+			ratio               => ratio
 		)
 		PORT MAP (
 			clk          => clk,
@@ -81,10 +84,11 @@ BEGIN
 
 	U_Y : ENTITY work.idx_to_coord
 		GENERIC MAP (
-			k         => k,
-			res       => res_v,
-			w_zoom	=> w_zoom,
-			ratio     => ratio
+			k                   => k,
+			res                 => res_v,
+			w_zoom              => w_zoom,
+			zoom_bits_per_stage => zoom_bits_per_stage,
+			ratio               => ratio
 		)
 		PORT MAP (
 			clk          => clk,

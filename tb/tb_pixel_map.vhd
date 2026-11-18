@@ -11,14 +11,13 @@ LIBRARY vunit_lib;
 
 ENTITY tb_pixel_map IS
 	GENERIC (
-		runner_cfg	: string;
-		k             : natural := 16;
-		res_h         : natural := 5;
-		res_v         : natural := 4;
-		w_zoom		: natural := 3;
-		ratio_fp      : integer := 4096;
-		lat_coord     : natural := 3;
-		lat_addr      : natural := 1
+		runner_cfg          : string;
+		k                   : natural := 16;
+		res_h               : natural := 5;
+		res_v               : natural := 4;
+		w_zoom              : natural := 3;
+		zoom_bits_per_stage : natural := 2;
+		ratio_fp            : integer := 4096
 	);
 END ENTITY tb_pixel_map;
 
@@ -27,6 +26,8 @@ ARCHITECTURE sim OF tb_pixel_map IS
 	CONSTANT w_row         : natural                := bits_of(res_v - 1);
 	CONSTANT w_col         : natural                := bits_of(res_h - 1);
 	CONSTANT w_addr		: natural                := bits_of(res_h * res_v - 1);
+	CONSTANT lat_coord     : natural                := (w_zoom + zoom_bits_per_stage - 1) / zoom_bits_per_stage + 2;
+	CONSTANT lat_addr      : natural                := 1;
 	CONSTANT lat_max       : natural                := maximum(lat_coord, lat_addr);
 	CONSTANT clk_period	: time                   := 10 ns;
 	CONSTANT ratio_c       : signed(k - 1 DOWNTO 0) := to_signed(ratio_fp, k);
@@ -143,13 +144,12 @@ BEGIN
 
 	DUT : ENTITY work.pixel_map
 		GENERIC MAP (
-			k			=> k,
-			res_h		=> res_h,
-			res_v		=> res_v,
-			w_zoom       => w_zoom,
-			ratio		=> RATIO_C,
-			lat_coord	=> lat_coord,
-			lat_addr     => lat_addr
+			k                   => k,
+			res_h               => res_h,
+			res_v               => res_v,
+			w_zoom              => w_zoom,
+			zoom_bits_per_stage => zoom_bits_per_stage,
+			ratio               => RATIO_C
 		)
 		PORT MAP (
 			clk           => clk,

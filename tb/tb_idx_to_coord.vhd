@@ -1,6 +1,6 @@
 -- VUnit testbench for idx_to_coord:
 --   coord = center + (2*idx - (RES-1)) * RATIO / 2^(zoom+1)
---   latency 3: valid_out / coord settle after 3 en cycles
+--   latency n_stages+2: valid_out / coord settle after that many en cycles
 
 LIBRARY ieee;
 	USE ieee.std_logic_1164.ALL;
@@ -12,21 +12,23 @@ LIBRARY vunit_lib;
 
 ENTITY tb_idx_to_coord IS
 	GENERIC (
-		runner_cfg	: string;
-		k             : natural := 16;
-		res           : natural := 5;
-		w_zoom		: natural := 3;
-		ratio_fp      : integer := 4096  -- 2^12 with K=16
+		runner_cfg          : string;
+		k                   : natural := 16;
+		res                 : natural := 5;
+		w_zoom              : natural := 3;
+		zoom_bits_per_stage : natural := 2;
+		ratio_fp            : integer := 4096  -- 2^12 with K=16
 	);
 END ENTITY tb_idx_to_coord;
 
 ARCHITECTURE sim OF tb_idx_to_coord IS
 
-	CONSTANT one           : signed(k - 1 DOWNTO 0) := to_signed(2 ** (k - 4), k);
-	CONSTANT w_idx         : natural                := bits_of(res - 1);
-	CONSTANT lat           : natural                := 3; -- must match idx_to_coord pipeline
-	CONSTANT clk_period	: time                   := 10 ns;
-	CONSTANT ratio_c       : signed(k - 1 DOWNTO 0) := to_signed(ratio_fp, k);
+	CONSTANT one        : signed(k - 1 DOWNTO 0) := to_signed(2 ** (k - 4), k);
+	CONSTANT w_idx      : natural                := bits_of(res - 1);
+	CONSTANT n_stages   : natural                := (w_zoom + zoom_bits_per_stage - 1) / zoom_bits_per_stage;
+	CONSTANT lat        : natural                := n_stages + 2; -- must match idx_to_coord pipeline
+	CONSTANT clk_period : time                   := 10 ns;
+	CONSTANT ratio_c    : signed(k - 1 DOWNTO 0) := to_signed(ratio_fp, k);
 
 	SIGNAL clk       : std_logic := '0';
 	SIGNAL rst       : std_logic;
@@ -136,10 +138,11 @@ BEGIN
 
 	DUT : ENTITY work.idx_to_coord
 		GENERIC MAP (
-			k         => k,
-			res       => res,
-			w_zoom	=> w_zoom,
-			ratio     => RATIO_C
+			k                   => k,
+			res                 => res,
+			w_zoom              => w_zoom,
+			zoom_bits_per_stage => zoom_bits_per_stage,
+			ratio               => RATIO_C
 		)
 		PORT MAP (
 			clk          => clk,
